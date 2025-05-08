@@ -40,6 +40,9 @@ const int SERVO_4_CHANNEL = 5;
 const int SERVO_5_CHANNEL = 6;
 const int SERVO_6_CHANNEL = 7;
 
+#define BRAKE 3
+#define RELEASE 4
+
 typedef enum {
     LIGHT_OFF,
     LIGHT_ON,
@@ -73,7 +76,6 @@ class NoU_Agent {
         serviceLightState stateServiceLight;
 };
 
-//TODO: Add breakmode
 class NoU_Motor {
     public:
         NoU_Motor(uint8_t motorPort);
@@ -83,6 +85,8 @@ class NoU_Motor {
         void setMaximumOutput(float maximumOutput);
         void setExponent(float exponent);
         void setDeadband(float deadband);
+        void setBrake(uint8_t brake);
+        void setState(uint8_t state);
     private:
         float applyCurve(float output);
         uint8_t motorPort;
@@ -91,6 +95,7 @@ class NoU_Motor {
         float maximumOutput = 1;
         float exponent = 1;
         float deadband = 0;
+        bool brakeOn = false;
 };
 
 class NoU_Servo {

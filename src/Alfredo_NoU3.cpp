@@ -151,12 +151,20 @@ void NoU_Motor::set(float output)
     if (inverted)
         motorPower = motorPower * -1;
 
-    if (motorPower >= 0)
+    if(motorPower==0)
+    {
+        if(brakeOn){
+            pca9685.setChannelDutyCycle(portMap[this->motorPort - 1][0], 100);
+            pca9685.setChannelDutyCycle(portMap[this->motorPort - 1][1], 100);
+        }else{
+            pca9685.setChannelDutyCycle(portMap[this->motorPort - 1][0], 0);
+            pca9685.setChannelDutyCycle(portMap[this->motorPort - 1][1], 0);
+        }
+    } else if (motorPower > 0)
     {
         pca9685.setChannelDutyCycle(portMap[this->motorPort - 1][0], abs(motorPower * 100));
         pca9685.setChannelDutyCycle(portMap[this->motorPort - 1][1], 0);
-    }
-    else
+    } else
     {
         pca9685.setChannelDutyCycle(portMap[this->motorPort - 1][0], 0);
         pca9685.setChannelDutyCycle(portMap[this->motorPort - 1][1], abs(motorPower * 100));
@@ -201,6 +209,33 @@ void NoU_Motor::setInverted(boolean inverted)
 {
     this->inverted = inverted;
 }
+
+void NoU_Motor::setBrake(uint8_t brake)
+{
+    switch(brake){
+        case BRAKE:
+            brakeOn = true;
+            break;
+        case RELEASE:
+            brakeOn = false;
+            break;
+    }
+}
+
+void NoU_Motor::setState(uint8_t state)
+{
+    switch(state){
+        case BRAKE:
+            setBrake(BRAKE);
+            set(0);
+            break;
+        case RELEASE:
+            setBrake(RELEASE);
+            set(0);
+            break;
+    }
+}
+
 
 NoU_Servo::NoU_Servo(uint8_t servoPort, uint16_t minPulse, uint16_t maxPulse)
 {
