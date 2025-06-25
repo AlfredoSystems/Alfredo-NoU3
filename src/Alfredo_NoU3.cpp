@@ -568,15 +568,15 @@ void NoU_Drivetrain::holonomicDrive(float xVelocity, float yVelocity, float rota
     float rearRightPower = 0;
 
     if(plusConfig){
-        frontLeftPower = yVelocity + rotation;
-        frontRightPower = xVelocity + rotation;
-        rearLeftPower = -xVelocity + rotation;
-        rearRightPower = -yVelocity + rotation;
+        frontLeftPower = yVelocity - rotation;
+        frontRightPower = xVelocity - rotation;
+        rearLeftPower = -xVelocity - rotation;
+        rearRightPower = -yVelocity - rotation;
     } else { //X config
-        frontLeftPower = -xVelocity - yVelocity + rotation;
-        frontRightPower = -xVelocity + yVelocity + rotation;
-        rearLeftPower = xVelocity - yVelocity + rotation;
-        rearRightPower = xVelocity + yVelocity + rotation;
+        frontLeftPower = xVelocity + yVelocity - rotation;
+        frontRightPower = xVelocity - yVelocity - rotation;
+        rearLeftPower = -xVelocity + yVelocity - rotation;
+        rearRightPower = -xVelocity - yVelocity - rotation;
     }
 
     float maxMagnitude = max(fabs(frontLeftPower), max(fabs(frontRightPower), max(fabs(rearLeftPower), fabs(rearRightPower))));
