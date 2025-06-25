@@ -234,7 +234,7 @@ void NoU_Agent::updateServiceLight()
         dutyLED = (1 << RSL_PWM_RES) - 1;
         break;
     }
-    Serial.println(dutyLED);
+    //Serial.println(dutyLED);
     ledcWrite(RSL_PIN, dutyLED);
 }
 
