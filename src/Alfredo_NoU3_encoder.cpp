@@ -47,6 +47,12 @@ int32_t Encoder::getPosition() {
     return pos;
 }
 
+void Encoder::resetPosition() {
+    noInterrupts();
+    _position = 0;
+    interrupts();
+}
+
 void Encoder::update() {
     uint8_t state = (digitalRead(_pinA) << 1) | digitalRead(_pinB);
     uint8_t transition = (_prevState << 2) | state;
