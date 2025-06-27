@@ -10,6 +10,7 @@ public:
     Encoder();
     void begin(uint8_t pinA, uint8_t pinB);
     int32_t getPosition();
+    void resetPosition();
     void update();
 
 private:
