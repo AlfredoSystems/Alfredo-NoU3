@@ -69,4 +69,5 @@ void loop() {
     } else {
         NoU3.setServiceLight(LIGHT_DISABLED);
     }
+    PestoLink.update();
 }
