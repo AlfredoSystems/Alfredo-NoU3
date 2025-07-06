@@ -3,7 +3,7 @@
  * The NoU3 documentation and tutorials can be found at https://alfredo-nou3.readthedocs.io/
  */
 
-#include <PestoLink-Receive.h>
+#include <PestoLink-Receive.h> // >=1.0.8
 #include <Alfredo_NoU3.h>
 
 // If your robot has more than a drivetrain, add those actuators here 
@@ -38,6 +38,7 @@ void setup() {
 unsigned long lastPrintTime = 0;
 
 void loop() {
+    NoU3.updateIMUs();
     if (lastPrintTime + 100 < millis()){
         Serial.printf("gyro yaw (radians): %.3f\r\n",  NoU3.yaw * angular_scale );
         lastPrintTime = millis();
