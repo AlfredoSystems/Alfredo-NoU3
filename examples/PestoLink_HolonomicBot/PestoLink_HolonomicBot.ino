@@ -15,6 +15,13 @@ NoU_Motor rearRightMotor(4);
 // This creates the drivetrain object, you shouldn't have to mess with this
 NoU_Drivetrain drivetrain(&frontLeftMotor, &frontRightMotor, &rearLeftMotor, &rearRightMotor);
 
+//The gyroscope sensor is by default precise, but not accurate. This is fixable by adjusting the angular scale factor.
+//Tuning procedure: 
+//Rotate the robot in place 5 times. Use the Serial printout to read the current gyro angle in Radians, we will call this "measured_angle".
+//measured_angle should be nearly 31.416 which is 5*2*pi. Update measured_angle below to complete the tuning process. 
+float measured_angle = 31.416;
+float angular_scale = (5.0*2.0*PI) / measured_angle;
+
 void setup() {
     //EVERYONE SHOULD CHANGE "NoU3_Bluetooth" TO THE NAME OF THEIR ROBOT HERE BEFORE PAIRING THEIR ROBOT TO ANY LAPTOP
     PestoLink.begin("NoU3_Bluetooth");
@@ -32,16 +39,9 @@ unsigned long lastPrintTime = 0;
 
 void loop() {
     if (lastPrintTime + 100 < millis()){
-        Serial.printf("gyro yaw (radians): %.3f\r\n",  NoU3.yaw * 1.145 );
+        Serial.printf("gyro yaw (radians): %.3f\r\n",  NoU3.yaw * angular_scale );
         lastPrintTime = millis();
     }
-
-    //The gyroscope sensor is by default precise, but not accurate. This is fixable by adjusting the angular scale factor.
-    //Tuning procedure: 
-    //Rotate the robot in place 5 times. Use the Serial printout to read the current gyro angle in Radians, we will call this "measured_angle".
-    //measured_angle should be nearly 31.416 which is 5*2*pi. Update measured_angle below to complete the tuning process. 
-    float measured_angle = 31.416;
-    float angular_scale = (5.0*2.0*PI) / measured_angle;
 
     // This measures your batteries voltage and sends it to PestoLink
     float batteryVoltage = NoU3.getBatteryVoltage();
@@ -68,5 +68,6 @@ void loop() {
         NoU3.setServiceLight(LIGHT_ENABLED);
     } else {
         NoU3.setServiceLight(LIGHT_DISABLED);
+        drivetrain.holonomicDrive(0, 0, 0); // stop motors if connection is lost
     }
 }
