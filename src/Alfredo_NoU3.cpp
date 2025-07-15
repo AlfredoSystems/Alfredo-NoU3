@@ -276,6 +276,8 @@ return this->_encoder.getPosition();
 void NoU_Motor::set(float output)
 {
     uint8_t portMap[8][2] = {{4, 5}, {6, 7}, {8, 9}, {10, 11}, {14, 15}, {12, 13}, {2, 3}, {0, 1}};
+    //needs to be changed to this at some point
+    //uint8_t portMap[8][2] = {{5, 4}, {7, 6}, {9, 8}, {11, 10}, {14, 15}, {12, 13}, {2, 3}, {0, 1}};
 
     float motorPower = applyCurve(output);
     if (inverted)

@@ -3,8 +3,8 @@
  * The NoU3 documentation and tutorials can be found at https://alfredo-nou3.readthedocs.io/
  */
 
-#include <PestoLink-Receive.h> // >=1.0.8
-#include <Alfredo_NoU3.h> // >=1.0.8
+#include <PestoLink-Receive.h>
+#include <Alfredo_NoU3.h>
 
 // If your robot has more than a drivetrain, add those actuators here 
 NoU_Motor frontLeftMotor(1);
@@ -23,7 +23,7 @@ float measured_angle = 31.416;
 float angular_scale = (5.0*2.0*PI) / measured_angle;
 
 void setup() {
-    //EVERYONE SHOULD CHANGE "NoU3_Bluetooth" TO THE NAME OF THEIR ROBOT HERE BEFORE PAIRING THEIR ROBOT TO ANY LAPTOP
+    //EVERYONE SHOULD CHANGE "NoU3_Bluetooth" TO THE NAME OF THEIR ROBOT HERE
     PestoLink.begin("NoU3_Bluetooth");
     Serial.begin(115200);
 
@@ -35,9 +35,8 @@ void setup() {
     rearLeftMotor.setInverted(true);
 }
 
-unsigned long lastPrintTime = 0;
-
 void loop() {
+    static unsigned long lastPrintTime = 0;
     if (lastPrintTime + 100 < millis()){
         Serial.printf("gyro yaw (radians): %.3f\r\n",  NoU3.yaw * angular_scale );
         lastPrintTime = millis();
@@ -48,9 +47,9 @@ void loop() {
     PestoLink.printBatteryVoltage(batteryVoltage);
 
     if (PestoLink.isConnected()) {
-        float fieldPowerX = -PestoLink.getAxis(1);
-        float fieldPowerY = PestoLink.getAxis(0);
-        float rotationPower = -PestoLink.getAxis(2);
+        float fieldPowerX = PestoLink.getAxis(1);
+        float fieldPowerY = -1 * PestoLink.getAxis(0);
+        float rotationPower = -1 * PestoLink.getAxis(2);
 
         // Get robot heading (in radians) from the gyro
         float heading = NoU3.yaw * angular_scale;
