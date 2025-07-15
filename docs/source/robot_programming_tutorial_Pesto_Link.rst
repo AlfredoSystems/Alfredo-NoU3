@@ -12,7 +12,7 @@ Setup
 
 | 3. **Install the** `Alfredo-NoU3`_ **and** `PestoLink-Receive`_ **libraries.** Click *Filter your search...* and type **Alfredo-NoU3**, then click **INSTALL**. Do the same for the library **PestoLink_Receive**.
 
-| 4. **Configure the Arduino IDE to upload to a NoU3.** Go to **Tools** > **Board** > **Boards Manager**. Search for "ESP32" and install the package "esp32 by Espressif Systems". Use version 3.0.7.
+| 4. **Configure the Arduino IDE to upload to a NoU3.** Go to **Tools** > **Board** > **Boards Manager**. Search for "ESP32" and install the package "esp32 by Espressif Systems". Use the latest version.
 
 | 5. **Decide what device you will use to drive your robot.** With a laptop, you can control your robot using the keyboard or a gamepad (for example an Xbox controller). With a smartphone, you can drive your robot with the touch screen.
 
@@ -119,7 +119,7 @@ Now, let's do something similar for our servos. Add the following code to the ``
 
 .. code-block:: cpp
 
-        if (PestoLink.buttonHeld(1)) {
+    if (PestoLink.buttonHeld(1)) {
         armServo.write(180);
     }
     else {
@@ -127,12 +127,6 @@ Now, let's do something similar for our servos. Add the following code to the ``
     }
    
 This will make ``armServo`` move to its 180° position while **Button 1** is held and move back to its 0° position while it's released. Again, change the name and duplicate as needed for the servos in your setup.
-   
-Lastly, add this line to the end of your ``loop`` function to let PestoLink-Receive process any new input coming in from your computer.
-
-.. code-block:: cpp
-
-    PestoLink.update();
    
 That should complete our test sketch. Here's what the final code should look like (but with the number of motors and servos adapted for your setup):
    
@@ -163,8 +157,6 @@ That should complete our test sketch. Here's what the final code should look lik
         else {
             armServo.write(0);
         }
-
-        PestoLink.update();
     }
     
 Uploading
@@ -221,8 +213,6 @@ We'll use the On-Screen Joystick to drive the robot in this tutorial, but you ca
         
         // Make the robot drive
         drivetrain.arcadeDrive(throttle, rotation);
-
-        PestoLink.update();
     }
     
 Lastly, we'll make our servo move when we press **button 0**.
@@ -272,8 +262,6 @@ Our completed sketch will now let us drive the robot. Upload it to the NoU3, pow
         else {
             basketServo.write(0);
         }
-
-        PestoLink.update();
     }
 
 Troubleshooting
