@@ -10,9 +10,6 @@ void setup() {
 long lastPrintMs = 0;  // Stores the last time the function was called
 
 void loop() {
-
-  NoU3.updateIMUs();
-
   if (millis() - lastPrintMs >= 200) {
     lastPrintMs = millis();  // Update the last time the function was called
     formatPrint(NoU3.acceleration_x); // Gs

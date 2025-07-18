@@ -17,7 +17,7 @@ NoU_Drivetrain drivetrain(&frontLeftMotor, &frontRightMotor, &rearLeftMotor, &re
 
 //The gyroscope sensor is by default precise, but not accurate. This is fixable by adjusting the angular scale factor.
 //Tuning procedure: 
-//Rotate the robot in place 5 times. Use the Serial printout to read the current gyro angle in Radians, we will call this "measured_angle".
+//Rotate the robot in place exactly 5 times. Use the Serial printout to read the current gyro angle in Radians, we will call this "measured_angle".
 //measured_angle should be nearly 31.416 which is 5*2*pi. Update measured_angle below to complete the tuning process. 
 float measured_angle = 31.416;
 float angular_scale = (5.0*2.0*PI) / measured_angle;
@@ -66,7 +66,8 @@ void loop() {
 
         NoU3.setServiceLight(LIGHT_ENABLED);
     } else {
-        NoU3.setServiceLight(LIGHT_DISABLED);
         drivetrain.holonomicDrive(0, 0, 0); // stop motors if connection is lost
+
+        NoU3.setServiceLight(LIGHT_DISABLED);
     }
 }
