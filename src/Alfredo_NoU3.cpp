@@ -38,7 +38,7 @@ void taskUpdateIMUs(void* pvParameters){
 void taskUpdateServiceLight(void* pvParameters){
     while (true) {
         NoU3.updateServiceLight();
-        vTaskDelay(pdMS_TO_TICKS(1));
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
@@ -271,6 +271,11 @@ void NoU_Motor::beginEncoder(int8_t pinA, int8_t pinB)
 int32_t NoU_Motor::getPosition()
 {
 return this->_encoder.getPosition();
+}
+
+void NoU_Motor::resetPosition()
+{
+this->_encoder.resetPosition();
 }
 
 void NoU_Motor::set(float output)

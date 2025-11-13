@@ -99,6 +99,7 @@ class NoU_Motor {
 
         void beginEncoder(int8_t pinA = -1, int8_t pinB = -1);
         int32_t getPosition();
+        void resetPosition();
 
     private:
         float applyCurve(float output);
