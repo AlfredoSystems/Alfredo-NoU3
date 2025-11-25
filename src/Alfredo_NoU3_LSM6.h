@@ -56,7 +56,7 @@
 
 //------------- LSM6DSD --------------//
 
-#define LSM6DSD_ADDRESS            0xD6
+#define LSM6DSD_ADDRESS            0x6A
 
 #define LSM6DSD_FUNC_CFG_ACCESS        0x01
 #define LSM6DSD_SENSOR_SYNC_TIME_FRAME 0x04

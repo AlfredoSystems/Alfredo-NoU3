@@ -22,21 +22,27 @@ float fmap(float val, float in_min, float in_max, float out_min, float out_max)
 
 volatile bool newDataAvailableLSM6 = true;
 volatile bool newDataAvailableMMC5 = true;
-void interruptRoutineLSM6() {
-  newDataAvailableLSM6 = true;
+void interruptRoutineLSM6()
+{
+    newDataAvailableLSM6 = true;
 }
-void interruptRoutineMMC5() {
-  newDataAvailableMMC5 = true;
+void interruptRoutineMMC5()
+{
+    newDataAvailableMMC5 = true;
 }
-void taskUpdateIMUs(void* pvParameters){
-    while (true) {
+void taskUpdateIMUs(void *pvParameters)
+{
+    while (true)
+    {
         NoU3.updateIMUs();
         vTaskDelay(pdMS_TO_TICKS(1));
     }
 }
 
-void taskUpdateServiceLight(void* pvParameters){
-    while (true) {
+void taskUpdateServiceLight(void *pvParameters)
+{
+    while (true)
+    {
         NoU3.updateServiceLight();
         vTaskDelay(pdMS_TO_TICKS(10));
     }
@@ -67,90 +73,97 @@ void NoU_Agent::beginIMUs()
     if (LSM6.begin(Wire1) == false)
     {
         Serial.println("LSM6 did not respond.");
-    } else {
-        //Serial.println("LSM6 is good.");
     }
-    pinMode(PIN_INTERRUPT_LSM6, INPUT);
-    attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT_LSM6), interruptRoutineLSM6, RISING);
-    LSM6.enableInterrupt(); // LSM6 collects readings at 104 hz
+    else
+    {
+        pinMode(PIN_INTERRUPT_LSM6, INPUT);
+        attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT_LSM6), interruptRoutineLSM6, RISING);
+        LSM6.enableInterrupt(); // LSM6 collects readings at 104 hz
+    }
 
     // Initialize MMC5
     if (MMC5.begin(Wire1) == false)
     {
         Serial.println("MMC5 did not respond.");
-    } else {
-        //Serial.println("MMC5 is good.");
     }
-    MMC5.softReset();
-    MMC5.setFilterBandwidth(800);
-    MMC5.setContinuousModeFrequency(100); // Allowed values are 1000, 200, 100, 50, 20, 10, 1 and 0
-    MMC5.enableAutomaticSetReset();
-    MMC5.enableContinuousMode();
-    pinMode(PIN_INTERRUPT_MMC5, INPUT);
-    attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT_MMC5), interruptRoutineMMC5, RISING);
-    MMC5.enableInterrupt();
+    else
+    {
+        MMC5.softReset();
+        MMC5.setFilterBandwidth(800);
+        MMC5.setContinuousModeFrequency(100); // Allowed values are 1000, 200, 100, 50, 20, 10, 1 and 0
+        MMC5.enableAutomaticSetReset();
+        MMC5.enableContinuousMode();
+        pinMode(PIN_INTERRUPT_MMC5, INPUT);
+        attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT_MMC5), interruptRoutineMMC5, RISING);
+        MMC5.enableInterrupt();
 
-    xTaskCreatePinnedToCore(taskUpdateIMUs, "taskUpdateIMUs", 4096, NULL, 2, NULL, 1);
+        xTaskCreatePinnedToCore(taskUpdateIMUs, "taskUpdateIMUs", 4096, NULL, 2, NULL, 1);
+    }
 }
 
 bool NoU_Agent::updateIMUs()
 {
-  bool isDataNew = false;
-  // Check LSM6 for new data
-  if (newDataAvailableLSM6) {
-    isDataNew = true;
-    newDataAvailableLSM6 = false;
+    bool isDataNew = false;
+    // Check LSM6 for new data
+    if (newDataAvailableLSM6)
+    {
+        isDataNew = true;
+        newDataAvailableLSM6 = false;
 
-    if (LSM6.accelerationAvailable()) {
-      LSM6.readAcceleration(&acceleration_x, &acceleration_y, &acceleration_z);// result in Gs
-      acceleration_x -= acceleration_x_offset;
-      acceleration_y -= acceleration_y_offset;
-      acceleration_z -= acceleration_z_offset;
+        if (LSM6.accelerationAvailable())
+        {
+            LSM6.readAcceleration(&acceleration_x, &acceleration_y, &acceleration_z); // result in Gs
+            acceleration_x -= acceleration_x_offset;
+            acceleration_y -= acceleration_y_offset;
+            acceleration_z -= acceleration_z_offset;
+        }
+
+        if (LSM6.gyroscopeAvailable())
+        {
+            LSM6.readGyroscope(&gyroscope_x, &gyroscope_y, &gyroscope_z); // Results in rad per second
+            gyroscope_x -= gyroscope_x_offset;
+            gyroscope_y -= gyroscope_y_offset;
+            gyroscope_z -= gyroscope_z_offset;
+        }
+
+        updateAngles();
     }
 
-    if (LSM6.gyroscopeAvailable()) {
-      LSM6.readGyroscope(&gyroscope_x, &gyroscope_y, &gyroscope_z);  // Results in rad per second
-      gyroscope_x -= gyroscope_x_offset;
-      gyroscope_y -= gyroscope_y_offset;
-      gyroscope_z -= gyroscope_z_offset;
+    // Check MMC5983MA for new data
+    if (newDataAvailableMMC5)
+    {
+        isDataNew = true;
+        newDataAvailableMMC5 = false;
+        MMC5.clearMeasDoneInterrupt();
+
+        MMC5.readMagnetometer(&magnetometer_x, &magnetometer_y, &magnetometer_z); // Results in µT (microteslas)
     }
 
-    updateAngles();
-  }
-
-  // Check MMC5983MA for new data
-  if (newDataAvailableMMC5) {
-    isDataNew = true;
-    newDataAvailableMMC5 = false;
-    MMC5.clearMeasDoneInterrupt();
-
-    MMC5.readMagnetometer(&magnetometer_x, &magnetometer_y, &magnetometer_z);  // Results in µT (microteslas)
-  }
-
-  return isDataNew;
-}  
+    return isDataNew;
+}
 
 void NoU_Agent::updateAngles()
 {
     static unsigned long lastTime = 0;
-    
+
     unsigned long currentTime = millis();
 
-    if (lastTime == 0) {
+    if (lastTime == 0)
+    {
         lastTime = currentTime;
         return;
     }
-        
-    float timestep = (currentTime - lastTime) / 1000.0;  // convert ms to seconds
+
+    float timestep = (currentTime - lastTime) / 1000.0; // convert ms to seconds
     lastTime = currentTime;
 
     float deltaPitch = gyroscope_x * timestep;
-    float deltaRoll  = gyroscope_y * timestep;
-    float deltaYaw   = gyroscope_z * timestep;
+    float deltaRoll = gyroscope_y * timestep;
+    float deltaYaw = gyroscope_z * timestep;
 
     pitch += deltaPitch;
-    roll  += deltaRoll;
-    yaw   += deltaYaw;
+    roll += deltaRoll;
+    yaw += deltaYaw;
 }
 
 void NoU_Agent::calibrateIMUs(float gravity_x, float gravity_y, float gravity_z)
@@ -163,13 +176,15 @@ void NoU_Agent::calibrateIMUs(float gravity_x, float gravity_y, float gravity_z)
     float gyroscope_x_accumulator = 0;
     float gyroscope_y_accumulator = 0;
     float gyroscope_z_accumulator = 0;
-    
+
     unsigned long startTime = millis();
     unsigned long calibrationTimeMs = 1000.0;
 
-    while(millis() < startTime + calibrationTimeMs) {
+    while (millis() < startTime + calibrationTimeMs)
+    {
         // Check if data is available and measurements are not complete
-        if (NoU3.updateIMUs()) {
+        if (NoU3.updateIMUs())
+        {
 
             // Store measurements in arrays
             acceleration_x_accumulator += NoU3.acceleration_x;
@@ -192,13 +207,13 @@ void NoU_Agent::calibrateIMUs(float gravity_x, float gravity_y, float gravity_z)
     gyroscope_z_offset = gyroscope_z_accumulator / num_vals;
 
     // Print averages
-    //Serial.print("Average values after "); Serial.print(num_vals); Serial.println(" measurements:");
-    //Serial.print("Acceleration X (Gs): "); Serial.println(acceleration_x_offset, 3);
-    //Serial.print("Acceleration Y (Gs): "); Serial.println(acceleration_y_offset, 3);
-    //Serial.print("Acceleration Z (Gs): "); Serial.println(acceleration_z_offset, 3);
-    //Serial.print("Gyroscope X (deg/s): "); Serial.println(gyroscope_x_offset, 3);
-    //Serial.print("Gyroscope Y (deg/s): "); Serial.println(gyroscope_y_offset, 3);
-    //Serial.print("Gyroscope Z (deg/s): "); Serial.println(gyroscope_z_offset, 3);
+    // Serial.print("Average values after "); Serial.print(num_vals); Serial.println(" measurements:");
+    // Serial.print("Acceleration X (Gs): "); Serial.println(acceleration_x_offset, 3);
+    // Serial.print("Acceleration Y (Gs): "); Serial.println(acceleration_y_offset, 3);
+    // Serial.print("Acceleration Z (Gs): "); Serial.println(acceleration_z_offset, 3);
+    // Serial.print("Gyroscope X (deg/s): "); Serial.println(gyroscope_x_offset, 3);
+    // Serial.print("Gyroscope Y (deg/s): "); Serial.println(gyroscope_y_offset, 3);
+    // Serial.print("Gyroscope Z (deg/s): "); Serial.println(gyroscope_z_offset, 3);
 }
 
 void NoU_Agent::beginServiceLight()
@@ -234,7 +249,7 @@ void NoU_Agent::updateServiceLight()
         dutyLED = (1 << RSL_PWM_RES) - 1;
         break;
     }
-    //Serial.println(dutyLED);
+    // Serial.println(dutyLED);
     ledcWrite(RSL_PIN, dutyLED);
 }
 
@@ -246,18 +261,20 @@ NoU_Motor::NoU_Motor(uint8_t motorPort)
 
 void NoU_Motor::beginEncoder(int8_t pinA, int8_t pinB)
 {
-    //the 6 pin pairs are for M2-M7. M1 and M8 do not have encoders
+    // the 6 pin pairs are for M2-M7. M1 and M8 do not have encoders
     const uint8_t encoderPinMap[6][2] = {
-        {17, 18},  // M2, E2
-        {15, 16},  // M3, E3
-        {10, 11},  // M4, E5
-        {41, 42},  // M5, E4
-        {40, 39},  // M6, E6
-        {38, 37}   // M7, E1
+        {17, 18}, // M2, E2
+        {15, 16}, // M3, E3
+        {10, 11}, // M4, E5
+        {41, 42}, // M5, E4
+        {40, 39}, // M6, E6
+        {38, 37}  // M7, E1
     };
 
-    if (pinA == -1 || pinB == -1){
-        if (this->motorPort < 2 || this->motorPort > 7){
+    if (pinA == -1 || pinB == -1)
+    {
+        if (this->motorPort < 2 || this->motorPort > 7)
+        {
             return;
         }
 
@@ -270,40 +287,49 @@ void NoU_Motor::beginEncoder(int8_t pinA, int8_t pinB)
 
 int32_t NoU_Motor::getPosition()
 {
-return this->_encoder.getPosition();
+    return this->_encoder.getPosition();
 }
 
 void NoU_Motor::resetPosition()
 {
-this->_encoder.resetPosition();
+    this->_encoder.resetPosition();
 }
 
 void NoU_Motor::set(float output)
 {
     uint8_t portMap[8][2] = {{4, 5}, {6, 7}, {8, 9}, {10, 11}, {14, 15}, {12, 13}, {2, 3}, {0, 1}};
-    //needs to be changed to this at some point
-    //uint8_t portMap[8][2] = {{5, 4}, {7, 6}, {9, 8}, {11, 10}, {14, 15}, {12, 13}, {2, 3}, {0, 1}};
+    // needs to be changed to this at some point
+    // uint8_t portMap[8][2] = {{5, 4}, {7, 6}, {9, 8}, {11, 10}, {14, 15}, {12, 13}, {2, 3}, {0, 1}};
 
     float motorPower = applyCurve(output);
     if (inverted)
         motorPower = motorPower * -1;
-    
+
     double pinZeroDuty = 0;
     double pinOneDuty = 0;
 
-    if (brakeMode){
-        if (motorPower <= 0) {
-            pinZeroDuty = ((abs(motorPower)*-1)+1) * 100;
+    if (brakeMode)
+    {
+        if (motorPower <= 0)
+        {
+            pinZeroDuty = ((abs(motorPower) * -1) + 1) * 100;
             pinOneDuty = 100;
-        } else {
-            pinZeroDuty = 100;
-            pinOneDuty = ((abs(motorPower)*-1)+1) * 100;
         }
-    } else {
-        if (motorPower >= 0) {
+        else
+        {
+            pinZeroDuty = 100;
+            pinOneDuty = ((abs(motorPower) * -1) + 1) * 100;
+        }
+    }
+    else
+    {
+        if (motorPower >= 0)
+        {
             pinZeroDuty = abs(motorPower * 100);
             pinOneDuty = 0;
-        } else {
+        }
+        else
+        {
             pinZeroDuty = 0;
             pinOneDuty = abs(motorPower * 100);
         }
@@ -326,7 +352,6 @@ float NoU_Motor::applyCurve(float input)
 
     return output * sign;
 }
-
 
 void NoU_Motor::setMotorCurve(float minimumOutput, float maximumOutput, float deadband, float exponent)
 {
@@ -448,7 +473,6 @@ NoU_Drivetrain::NoU_Drivetrain(NoU_Motor *frontLeftMotor, NoU_Motor *frontRightM
 {
 }
 
-
 void NoU_Drivetrain::setMotors(float frontLeftPower, float frontRightPower, float rearLeftPower, float rearRightPower)
 {
     if (drivetrainType == DRIVE_FOUR_MOTORS)
@@ -568,18 +592,21 @@ void NoU_Drivetrain::holonomicDrive(float xVelocity, float yVelocity, float rota
 {
     if (drivetrainType == DRIVE_TWO_MOTORS)
         return;
-    
+
     float frontLeftPower = 0;
     float frontRightPower = 0;
     float rearLeftPower = 0;
     float rearRightPower = 0;
 
-    if(plusConfig){
+    if (plusConfig)
+    {
         frontLeftPower = yVelocity - rotation;
         frontRightPower = xVelocity - rotation;
         rearLeftPower = -xVelocity - rotation;
         rearRightPower = -yVelocity - rotation;
-    } else { //X config
+    }
+    else
+    { // X config
         frontLeftPower = xVelocity + yVelocity - rotation;
         frontRightPower = xVelocity - yVelocity - rotation;
         rearLeftPower = -xVelocity + yVelocity - rotation;
@@ -597,7 +624,6 @@ void NoU_Drivetrain::holonomicDrive(float xVelocity, float yVelocity, float rota
 
     setMotors(frontLeftPower, frontRightPower, rearLeftPower, rearRightPower);
 }
-
 
 void NoU_Drivetrain::setMotorCurves(float minimumOutput, float maximumOutput, float deadband, float exponent)
 {
