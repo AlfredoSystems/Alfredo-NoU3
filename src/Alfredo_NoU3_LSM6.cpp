@@ -19,57 +19,60 @@
 
 #include "Alfredo_NoU3_LSM6.h"
 
-LSM6DSOXClass::LSM6DSOXClass()
+LSM6Class::LSM6Class()
 {
 }
 
-LSM6DSOXClass::~LSM6DSOXClass()
+LSM6Class::~LSM6Class()
 {
 }
 
-int LSM6DSOXClass::begin(TwoWire& wire)
+int LSM6Class::begin(TwoWire &wire)
 {
-	_slaveAddress = LSM6DSOX_ADDRESS;
-	
-	_wire = &wire;
 
-  if (!(readRegister(LSM6DSOX_WHO_AM_I_REG) == 0x6C || readRegister(LSM6DSOX_WHO_AM_I_REG) == 0x69)) {
-    end();
-    return 0;
+  _slaveAddress = LSM6DSD_ADDRESS;
+
+  _wire = &wire;
+
+  _slaveAddress = LSM6DSOX_ADDRESS;
+  if (readRegister(LSM6DSOX_WHO_AM_I_REG) == 0x6C || readRegister(LSM6DSOX_WHO_AM_I_REG) == 0x69)
+  {
+    // set the gyroscope control register to work at 104 Hz, 2000 dps and in bypass mode
+    // writeRegister(LSM6DSOX_CTRL2_G, 0x4C); //0100 1100
+    // set the gyroscope control register to work at 26 Hz, 2000 dps and in bypass mode
+    // writeRegister(LSM6DSOX_CTRL2_G, 0x2C); //0010 1100
+    // set the gyroscope control register to work at 104 Hz, 500 dps and in bypass mode
+    writeRegister(LSM6DSOX_CTRL2_G, 0x44); // 0100 0100
+
+    // Set the Accelerometer control register to work at 104 Hz, 4 g,and in bypass mode and enable ODR/4
+    // low pass filter (check figure9 of LSM6DSOX's datasheet)
+    writeRegister(LSM6DSOX_CTRL1_A, 0x4A);
+
+    // set gyroscope power mode to high performance and bandwidth to 16 MHz
+    writeRegister(LSM6DSOX_CTRL7_G, 0x00); // 0000 0000
+
+    // Set the ODR config register to ODR/4
+    writeRegister(LSM6DSOX_CTRL8_A, 0x09);
+
+    return 1;
+  }
+  
+  Serial.println(readRegister(LSM6DSD_WHO_AM_I));
+  if(readRegister(LSM6DSD_WHO_AM_I) == 0x0F){
+
+    Serial.println("LSM6DSD detected");
+    return 1;
   }
 
-  //set the gyroscope control register to work at 104 Hz, 2000 dps and in bypass mode
-  //writeRegister(LSM6DSOX_CTRL2_G, 0x4C); //0100 1100
-  //set the gyroscope control register to work at 26 Hz, 2000 dps and in bypass mode
-  //writeRegister(LSM6DSOX_CTRL2_G, 0x2C); //0010 1100
-  //set the gyroscope control register to work at 104 Hz, 500 dps and in bypass mode
-  writeRegister(LSM6DSOX_CTRL2_G, 0x44); //0100 0100
-
-  // Set the Accelerometer control register to work at 104 Hz, 4 g,and in bypass mode and enable ODR/4
-  // low pass filter (check figure9 of LSM6DSOX's datasheet)
-  writeRegister(LSM6DSOX_CTRL1_A, 0x4A);
-
-  // set gyroscope power mode to high performance and bandwidth to 16 MHz
-  writeRegister(LSM6DSOX_CTRL7_G, 0x00);//0000 0000
-
-  // Set the ODR config register to ODR/4
-  writeRegister(LSM6DSOX_CTRL8_A, 0x09);
-
-  return 1;
+  return 0;
 }
 
-void LSM6DSOXClass::end()
-{
-    writeRegister(LSM6DSOX_CTRL2_G, 0x00);
-    writeRegister(LSM6DSOX_CTRL1_A, 0x00);
-    _wire->end();
-}
-
-int LSM6DSOXClass::readAcceleration(float *x, float *y, float *z)
+int LSM6Class::readAcceleration(float *x, float *y, float *z)
 {
   int16_t data[3];
 
-  if (!readRegisters(LSM6DSOX_OUTX_L_A, (uint8_t*)data, sizeof(data))) {
+  if (!readRegisters(LSM6DSOX_OUTX_L_A, (uint8_t *)data, sizeof(data)))
+  {
     *x = NAN;
     *y = NAN;
     *z = NAN;
@@ -77,33 +80,35 @@ int LSM6DSOXClass::readAcceleration(float *x, float *y, float *z)
     return 0;
   }
 
-  //REORDERED FOR NOU3 CONVENTION
+  // REORDERED FOR NOU3 CONVENTION
   *x = 1 * data[1] * 4.0 / 32768.0;
   *y = -1 * data[0] * 4.0 / 32768.0;
-  *z =  1 * data[2] * 4.0 / 32768.0;
+  *z = 1 * data[2] * 4.0 / 32768.0;
 
   return 1;
 }
 
-int LSM6DSOXClass::accelerationAvailable()
+int LSM6Class::accelerationAvailable()
 {
-  if (readRegister(LSM6DSOX_STATUS_REG) & 0x01) {
+  if (readRegister(LSM6DSOX_STATUS_REG) & 0x01)
+  {
     return 1;
   }
 
   return 0;
 }
 
-float LSM6DSOXClass::accelerationSampleRate()
+float LSM6Class::accelerationSampleRate()
 {
   return 104.0F;
 }
 
-int LSM6DSOXClass::readGyroscope(float *x, float *y, float *z)
+int LSM6Class::readGyroscope(float *x, float *y, float *z)
 {
   int16_t data[3];
 
-  if (!readRegisters(LSM6DSOX_OUTX_L_G, (uint8_t*)data, sizeof(data))) {
+  if (!readRegisters(LSM6DSOX_OUTX_L_G, (uint8_t *)data, sizeof(data)))
+  {
     *x = NAN;
     *y = NAN;
     *z = NAN;
@@ -111,24 +116,25 @@ int LSM6DSOXClass::readGyroscope(float *x, float *y, float *z)
     return 0;
   }
 
-  //REORDERED FOR NOU3 CONVENTION
-  *x =  1 * float(data[1]) * (PI/180.0) * 500.0 / 32768.0;
-  *y = -1 * float(data[0]) * (PI/180.0) * 500.0 / 32768.0;
-  *z =  1 * float(data[2]) * (PI/180.0) * 500.0 / 32768.0;
+  // REORDERED FOR NOU3 CONVENTION
+  *x = 1 * float(data[1]) * (PI / 180.0) * 500.0 / 32768.0;
+  *y = -1 * float(data[0]) * (PI / 180.0) * 500.0 / 32768.0;
+  *z = 1 * float(data[2]) * (PI / 180.0) * 500.0 / 32768.0;
 
   return 1;
 }
 
-int LSM6DSOXClass::gyroscopeAvailable()
+int LSM6Class::gyroscopeAvailable()
 {
-  if (readRegister(LSM6DSOX_STATUS_REG) & 0x02) {
+  if (readRegister(LSM6DSOX_STATUS_REG) & 0x02)
+  {
     return 1;
   }
 
   return 0;
 }
 
-int LSM6DSOXClass::readTemperature(int& temperature_deg)
+int LSM6Class::readTemperature(int &temperature_deg)
 {
   float temperature_float = 0;
   readTemperatureFloat(temperature_float);
@@ -138,12 +144,13 @@ int LSM6DSOXClass::readTemperature(int& temperature_deg)
   return 1;
 }
 
-int LSM6DSOXClass::readTemperatureFloat(float& temperature_deg)
+int LSM6Class::readTemperatureFloat(float &temperature_deg)
 {
   /* Read the raw temperature from the sensor. */
   int16_t temperature_raw = 0;
 
-  if (readRegisters(LSM6DSOX_OUT_TEMP_L, reinterpret_cast<uint8_t*>(&temperature_raw), sizeof(temperature_raw)) != 1) {
+  if (readRegisters(LSM6DSOX_OUT_TEMP_L, reinterpret_cast<uint8_t *>(&temperature_raw), sizeof(temperature_raw)) != 1)
+  {
     return 0;
   }
 
@@ -156,65 +163,71 @@ int LSM6DSOXClass::readTemperatureFloat(float& temperature_deg)
   return 1;
 }
 
-int LSM6DSOXClass::temperatureAvailable()
+int LSM6Class::temperatureAvailable()
 {
-  if (readRegister(LSM6DSOX_STATUS_REG) & 0x04) {
+  if (readRegister(LSM6DSOX_STATUS_REG) & 0x04)
+  {
     return 1;
   }
 
   return 0;
 }
 
-float LSM6DSOXClass::gyroscopeSampleRate()
+float LSM6Class::gyroscopeSampleRate()
 {
   return 104.0F;
 }
 
-void LSM6DSOXClass::enableInterrupt()
+void LSM6Class::enableInterrupt()
 {
-  writeRegister(LSM6DSOX_INT1_CTRL, 0x03); //0000 0011
+  writeRegister(LSM6DSOX_INT1_CTRL, 0x03); // 0000 0011
 }
 
-int LSM6DSOXClass::readRegister(uint8_t address)
+int LSM6Class::readRegister(uint8_t address)
 {
   uint8_t value;
-  
-  if (readRegisters(address, &value, sizeof(value)) != 1) {
+
+  if (readRegisters(address, &value, sizeof(value)) != 1)
+  {
     return -1;
   }
-  
+
   return value;
 }
 
-int LSM6DSOXClass::readRegisters(uint8_t address, uint8_t* data, size_t length)
+int LSM6Class::readRegisters(uint8_t address, uint8_t *data, size_t length)
 {
-    _wire->beginTransmission(_slaveAddress);
-    _wire->write(address);
+  _wire->beginTransmission(_slaveAddress);
+  _wire->write(address);
 
-    if (_wire->endTransmission(false) != 0) {
-      return -1;
-    }
+  if (_wire->endTransmission(false) != 0)
+  {
+    return -1;
+  }
 
-    if (_wire->requestFrom(_slaveAddress, length) != length) {
-      return 0;
-    }
+  if (_wire->requestFrom(_slaveAddress, length) != length)
+  {
+    return 0;
+  }
 
-    for (size_t i = 0; i < length; i++) {
-      *data++ = _wire->read();
-    }
-  
+  for (size_t i = 0; i < length; i++)
+  {
+    *data++ = _wire->read();
+  }
+
   return 1;
 }
 
-int LSM6DSOXClass::writeRegister(uint8_t address, uint8_t value)
+int LSM6Class::writeRegister(uint8_t address, uint8_t value)
 {
 
-    _wire->beginTransmission(_slaveAddress);
-    _wire->write(address);
-    _wire->write(value);
-    if (_wire->endTransmission() != 0) {
-      return 0;
-    }
-  
+  _wire->beginTransmission(_slaveAddress);
+  _wire->write(address);
+  _wire->write(value);
+  if (_wire->endTransmission() != 0)
+  {
+    return 0;
+  }
+
   return 1;
 }

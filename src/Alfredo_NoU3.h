@@ -158,7 +158,7 @@ class NoU_Drivetrain {
 };
 
 extern NoU_Agent NoU3;
-extern LSM6DSOXClass LSM6;
+extern LSM6Class LSM6;
 extern SFE_MMC5983MA MMC5;
 
 extern PCA9685 pca9685;
