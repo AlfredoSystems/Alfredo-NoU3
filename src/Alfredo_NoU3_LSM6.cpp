@@ -57,12 +57,11 @@ int LSM6Class::begin(TwoWire &wire)
     return 1;
   }
   
-  Serial.println(readRegister(LSM6DSD_WHO_AM_I));
-  if(readRegister(LSM6DSD_WHO_AM_I) == 0x0F){
+  // if(readRegister(LSM6DSD_WHO_AM_I) == 0x6A){
 
-    Serial.println("LSM6DSD detected");
-    return 1;
-  }
+  //   Serial.println("LSM6DSD detected");
+  //   return 1;
+  // }
 
   return 0;
 }
