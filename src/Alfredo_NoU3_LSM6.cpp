@@ -31,11 +31,13 @@ int LSM6Class::begin(TwoWire &wire)
 {
   _wire = &wire;
 
+  // TODO: Supporting these chips will be easy to do: DSR, DSV, DSL, DS3TR-C
+
   //LSM6DSOX, LSM6DSOW
   _slaveAddress = 0x6B;
   if (readRegister(LSM6DS_WHO_AM_I_REG) == 0x6C)
   {
-    Serial.println("LSM6DSOW/LSM6DSOX Detected");
+    //Serial.println("LSM6DSOW/LSM6DSOX Detected");
     setupLSM6();
     return 1;
   }
@@ -44,7 +46,7 @@ int LSM6Class::begin(TwoWire &wire)
   _slaveAddress = 0x6A;
   if (readRegister(LSM6DS_WHO_AM_I_REG) == 0x69)
   {
-    Serial.println("LSM6DS3 Detected");
+    //Serial.println("LSM6DS3 Detected");
     setupLSM6();
     return 1;
   }
@@ -53,7 +55,7 @@ int LSM6Class::begin(TwoWire &wire)
   _slaveAddress = 0x6A;
   if (readRegister(LSM6DS_WHO_AM_I_REG) == 0x6A)
   {
-    Serial.println("LSM6DSD Detected");
+    //Serial.println("LSM6DSD Detected");
     setupLSM6();
     return 1;
   }

@@ -21,7 +21,7 @@ float fmap(float val, float in_min, float in_max, float out_min, float out_max)
 }
 
 volatile bool newDataAvailableLSM6 = true;
-volatile bool newDataAvailableMMC5 = false;
+volatile bool newDataAvailableMMC5 = true;
 void interruptRoutineLSM6()
 {
     newDataAvailableLSM6 = true;
@@ -30,11 +30,31 @@ void interruptRoutineMMC5()
 {
     newDataAvailableMMC5 = true;
 }
-void taskUpdateIMUs(void *pvParameters)
+
+void taskUpdateLSM6(void *pvParameters)
 {
     while (true)
-    {   
-        NoU3.updateIMUs();
+    {
+        // Check LSM6 for new data
+        if (newDataAvailableLSM6)
+        {
+            newDataAvailableLSM6 = false;
+            NoU3.updateLSM6();
+        }
+        vTaskDelay(pdMS_TO_TICKS(1));
+    }
+}
+
+void taskUpdateMMC5(void *pvParameters)
+{
+    while (true)
+    {
+        // Check MMC5983MA for new data
+        if (newDataAvailableMMC5)
+        {
+            newDataAvailableMMC5 = false;
+            NoU3.updateMMC5();
+        }
         vTaskDelay(pdMS_TO_TICKS(1));
     }
 }
@@ -79,6 +99,7 @@ void NoU_Agent::beginIMUs()
         pinMode(PIN_INTERRUPT_LSM6, INPUT);
         attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT_LSM6), interruptRoutineLSM6, RISING);
         LSM6.enableInterrupt(); // LSM6 collects readings at 104 hz
+        xTaskCreatePinnedToCore(taskUpdateLSM6, "taskUpdateLSM6", 4096, NULL, 2, NULL, 1);
     }
 
     // Initialize MMC5
@@ -96,50 +117,63 @@ void NoU_Agent::beginIMUs()
         pinMode(PIN_INTERRUPT_MMC5, INPUT);
         attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT_MMC5), interruptRoutineMMC5, RISING);
         MMC5.enableInterrupt();
-    }
 
-    xTaskCreatePinnedToCore(taskUpdateIMUs, "taskUpdateIMUs", 4096, NULL, 2, NULL, 1);
+        xTaskCreatePinnedToCore(taskUpdateMMC5, "taskUpdateMMC5", 4096, NULL, 2, NULL, 1);
+    }
 }
 
 bool NoU_Agent::updateIMUs()
 {
-    bool isDataNew = false;
-    // Check LSM6 for new data
-    if (newDataAvailableLSM6)
+    bool isNewData = false;
+    if (updateLSM6())
     {
-        isDataNew = true;
-        newDataAvailableLSM6 = false;
+        isNewData = true;
+    }
+    if (updateMMC5())
+    {
+        isNewData = true;
+    }
 
-        if (LSM6.accelerationAvailable())
-        {
-            LSM6.readAcceleration(&acceleration_x, &acceleration_y, &acceleration_z); // result in Gs
-            acceleration_x -= acceleration_x_offset;
-            acceleration_y -= acceleration_y_offset;
-            acceleration_z -= acceleration_z_offset;
-        }
+    return isNewData;
+}
 
-        if (LSM6.gyroscopeAvailable())
-        {
-            LSM6.readGyroscope(&gyroscope_x, &gyroscope_y, &gyroscope_z); // Results in rad per second
-            gyroscope_x -= gyroscope_x_offset;
-            gyroscope_y -= gyroscope_y_offset;
-            gyroscope_z -= gyroscope_z_offset;
-        }
+bool NoU_Agent::updateLSM6()
+{
+    bool isNewData = false;
+
+    if (LSM6.accelerationAvailable())
+    {
+        LSM6.readAcceleration(&acceleration_x, &acceleration_y, &acceleration_z); // result in Gs
+        acceleration_x -= acceleration_x_offset;
+        acceleration_y -= acceleration_y_offset;
+        acceleration_z -= acceleration_z_offset;
+
+        isNewData = true;
+    }
+
+    if (LSM6.gyroscopeAvailable())
+    {
+        LSM6.readGyroscope(&gyroscope_x, &gyroscope_y, &gyroscope_z); // Results in rad per second
+        gyroscope_x -= gyroscope_x_offset;
+        gyroscope_y -= gyroscope_y_offset;
+        gyroscope_z -= gyroscope_z_offset;
+
+        isNewData = true;
 
         updateAngles();
     }
 
-    // Check MMC5983MA for new data
-    if (newDataAvailableMMC5)
-    {
-        isDataNew = true;
-        newDataAvailableMMC5 = false;
-        MMC5.clearMeasDoneInterrupt();
+    return isNewData;
+}
 
-        MMC5.readMagnetometer(&magnetometer_x, &magnetometer_y, &magnetometer_z); // Results in µT (microteslas)
-    }
+bool NoU_Agent::updateMMC5()
+{
+    bool isNewData = false;
 
-    return isDataNew;
+    MMC5.clearMeasDoneInterrupt();
+    isNewData = MMC5.readMagnetometer(&magnetometer_x, &magnetometer_y, &magnetometer_z); // Results in µT (microteslas)
+
+    return isNewData;
 }
 
 void NoU_Agent::updateAngles()

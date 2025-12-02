@@ -61,6 +61,8 @@ class NoU_Agent {
 		void beginMotors();
 		void beginIMUs();
         bool updateIMUs();
+        bool updateLSM6();
+        bool updateMMC5();
 
         void updateAngles();
         void calibrateIMUs(float gravity_x = 0, float gravity_y = 0, float gravity_z = 1.0);

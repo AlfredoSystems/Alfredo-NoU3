@@ -2,9 +2,10 @@
 
 void setup() {
   Serial.begin(115200);
+  delay(2000);
   NoU3.begin();
 
-  Serial.println("Accel_X\tAccel_Y\tAccel_Z\tGyro_X\tGyro_Y\tGyro_Z\tMag_X\tMag_Y\tMag_Z");
+  Serial.println("Accel_X\tAccel_Y\tAccel_Z\tGyro_X\tGyro_Y\tGyro_Z\tMag_X\tMag_Y\tMag_Z\tRoll\tPitch\tYaw");
 }
 
 long lastPrintMs = 0;  // Stores the last time the function was called
@@ -21,6 +22,9 @@ void loop() {
     formatPrint(NoU3.magnetometer_x); // uT
     formatPrint(NoU3.magnetometer_y);
     formatPrint(NoU3.magnetometer_z);
+    formatPrint(NoU3.roll);
+    formatPrint(NoU3.pitch);
+    formatPrint(NoU3.yaw);
     Serial.println('\t');
   }
 }
