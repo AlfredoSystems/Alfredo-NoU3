@@ -29,41 +29,65 @@ LSM6Class::~LSM6Class()
 
 int LSM6Class::begin(TwoWire &wire)
 {
-
-  _slaveAddress = LSM6DSD_ADDRESS;
-
   _wire = &wire;
 
-  _slaveAddress = LSM6DSOX_ADDRESS;
-  if (readRegister(LSM6DSOX_WHO_AM_I_REG) == 0x6C || readRegister(LSM6DSOX_WHO_AM_I_REG) == 0x69)
+  //LSM6DSOX, LSM6DSOW
+  _slaveAddress = 0x6B;
+  if (readRegister(LSM6DSOX_WHO_AM_I_REG) == 0x6C)
   {
-    // set the gyroscope control register to work at 104 Hz, 2000 dps and in bypass mode
-    // writeRegister(LSM6DSOX_CTRL2_G, 0x4C); //0100 1100
-    // set the gyroscope control register to work at 26 Hz, 2000 dps and in bypass mode
-    // writeRegister(LSM6DSOX_CTRL2_G, 0x2C); //0010 1100
-    // set the gyroscope control register to work at 104 Hz, 500 dps and in bypass mode
-    writeRegister(LSM6DSOX_CTRL2_G, 0x44); // 0100 0100
+    Serial.println("LSM6DSOW/LSM6DSOX Detected");
+    setupLSM6();
+    return 1;
+  }
 
-    // Set the Accelerometer control register to work at 104 Hz, 4 g,and in bypass mode and enable ODR/4
-    // low pass filter (check figure9 of LSM6DSOX's datasheet)
-    writeRegister(LSM6DSOX_CTRL1_A, 0x4A);
+  //LSM6DS3
+  _slaveAddress = 0x6A;
+  if (readRegister(LSM6DSOX_WHO_AM_I_REG) == 0x69)
+  {
+    Serial.println("LSM6DS3 Detected");
+    setupLSM6();
+    return 1;
+  }
 
-    // set gyroscope power mode to high performance and bandwidth to 16 MHz
-    writeRegister(LSM6DSOX_CTRL7_G, 0x00); // 0000 0000
-
-    // Set the ODR config register to ODR/4
-    writeRegister(LSM6DSOX_CTRL8_A, 0x09);
-
+  //LSM6DSD
+  _slaveAddress = 0x6A;
+  if (readRegister(LSM6DSOX_WHO_AM_I_REG) == 0x6A)
+  {
+    Serial.println("LSM6DSD Detected");
+    setupLSM6();
     return 1;
   }
   
-  // if(readRegister(LSM6DSD_WHO_AM_I) == 0x6A){
-
-  //   Serial.println("LSM6DSD detected");
-  //   return 1;
-  // }
 
   return 0;
+}
+
+int LSM6Class::setupLSM6(void)
+{
+  // disable I3C interface to prevent bus glitches
+  writeRegister(LSM6DSOX_CTRL9_XL, 0xE2); //default 0xE0
+
+  // enable BDU to prevent data corruption during reads
+  writeRegister(LSM6DSOX_CTRL9_XL, 0x44); //default 0x40
+
+  // set the gyroscope control register to work at 104 Hz, 2000 dps and in bypass mode
+  // writeRegister(LSM6DSOX_CTRL2_G, 0x4C); //0100 1100
+  // set the gyroscope control register to work at 26 Hz, 2000 dps and in bypass mode
+  // writeRegister(LSM6DSOX_CTRL2_G, 0x2C); //0010 1100
+  // set the gyroscope control register to work at 104 Hz, 500 dps and in bypass mode
+  writeRegister(LSM6DSOX_CTRL2_G, 0x44); // 0100 0100
+
+  // Set the Accelerometer control register to work at 104 Hz, 4 g,and in bypass mode and enable ODR/4
+  // low pass filter (check figure9 of LSM6DSOX's datasheet)
+  writeRegister(LSM6DSOX_CTRL1_A, 0x4A);
+
+  // set gyroscope power mode to high performance and bandwidth to 16 MHz
+  writeRegister(LSM6DSOX_CTRL7_G, 0x00); // 0000 0000
+
+  // Set the ODR config register to ODR/4
+  writeRegister(LSM6DSOX_CTRL8_A, 0x09);
+
+  return 1;
 }
 
 int LSM6Class::readAcceleration(float *x, float *y, float *z)
@@ -184,6 +208,12 @@ void LSM6Class::enableInterrupt()
 
 int LSM6Class::readRegister(uint8_t address)
 {
+
+  if (_slaveAddress == -1)
+  {
+    return -1;
+  }
+
   uint8_t value;
 
   if (readRegisters(address, &value, sizeof(value)) != 1)
@@ -196,6 +226,11 @@ int LSM6Class::readRegister(uint8_t address)
 
 int LSM6Class::readRegisters(uint8_t address, uint8_t *data, size_t length)
 {
+  if (_slaveAddress == -1)
+  {
+    return -1;
+  }
+
   _wire->beginTransmission(_slaveAddress);
   _wire->write(address);
 
@@ -219,6 +254,10 @@ int LSM6Class::readRegisters(uint8_t address, uint8_t *data, size_t length)
 
 int LSM6Class::writeRegister(uint8_t address, uint8_t value)
 {
+  if (_slaveAddress == -1)
+  {
+    return -1;
+  }
 
   _wire->beginTransmission(_slaveAddress);
   _wire->write(address);

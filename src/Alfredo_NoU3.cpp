@@ -21,7 +21,7 @@ float fmap(float val, float in_min, float in_max, float out_min, float out_max)
 }
 
 volatile bool newDataAvailableLSM6 = true;
-volatile bool newDataAvailableMMC5 = true;
+volatile bool newDataAvailableMMC5 = false;
 void interruptRoutineLSM6()
 {
     newDataAvailableLSM6 = true;
@@ -33,7 +33,7 @@ void interruptRoutineMMC5()
 void taskUpdateIMUs(void *pvParameters)
 {
     while (true)
-    {
+    {   
         NoU3.updateIMUs();
         vTaskDelay(pdMS_TO_TICKS(1));
     }
@@ -96,9 +96,9 @@ void NoU_Agent::beginIMUs()
         pinMode(PIN_INTERRUPT_MMC5, INPUT);
         attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT_MMC5), interruptRoutineMMC5, RISING);
         MMC5.enableInterrupt();
-
-        xTaskCreatePinnedToCore(taskUpdateIMUs, "taskUpdateIMUs", 4096, NULL, 2, NULL, 1);
     }
+
+    xTaskCreatePinnedToCore(taskUpdateIMUs, "taskUpdateIMUs", 4096, NULL, 2, NULL, 1);
 }
 
 bool NoU_Agent::updateIMUs()
