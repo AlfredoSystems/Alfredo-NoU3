@@ -1,5 +1,5 @@
 /*
-  This file is part of the Arduino_LSM6DSOX library.
+  This file is part of the Arduino_LSM6DS library.
   Copyright (c) 2021 Arduino SA. All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -24,35 +24,35 @@
 #include <Wire.h>
 #include <SPI.h>
 
-#define LSM6DSOX_INT1_CTRL          0X0D
-#define LSM6DSOX_WHO_AM_I_REG       0X0F
-#define LSM6DSOX_CTRL1_A            0X10
-#define LSM6DSOX_CTRL2_G            0X11
-#define LSM6DSOX_CTRL3_C            0X12
+#define LSM6DS_INT1_CTRL          0X0D
+#define LSM6DS_WHO_AM_I_REG       0X0F
+#define LSM6DS_CTRL1_A            0X10
+#define LSM6DS_CTRL2_G            0X11
+#define LSM6DS_CTRL3_C            0X12
 
-#define LSM6DSOX_CTRL6_C            0X15
-#define LSM6DSOX_CTRL7_G            0X16
-#define LSM6DSOX_CTRL8_A            0X17
-#define LSM6DSOX_CTRL9_XL           0X18
+#define LSM6DS_CTRL6_C            0X15
+#define LSM6DS_CTRL7_G            0X16
+#define LSM6DS_CTRL8_A            0X17
+#define LSM6DS_CTRL9_XL           0X18
 
-#define LSM6DSOX_STATUS_REG         0X1E
+#define LSM6DS_STATUS_REG         0X1E
 
-#define LSM6DSOX_OUT_TEMP_L         0X20
-#define LSM6DSOX_OUT_TEMP_H         0X21
+#define LSM6DS_OUT_TEMP_L         0X20
+#define LSM6DS_OUT_TEMP_H         0X21
 
-#define LSM6DSOX_OUTX_L_G           0X22
-#define LSM6DSOX_OUTX_H_G           0X23
-#define LSM6DSOX_OUTY_L_G           0X24
-#define LSM6DSOX_OUTY_H_G           0X25
-#define LSM6DSOX_OUTZ_L_G           0X26
-#define LSM6DSOX_OUTZ_H_G           0X27
+#define LSM6DS_OUTX_L_G           0X22
+#define LSM6DS_OUTX_H_G           0X23
+#define LSM6DS_OUTY_L_G           0X24
+#define LSM6DS_OUTY_H_G           0X25
+#define LSM6DS_OUTZ_L_G           0X26
+#define LSM6DS_OUTZ_H_G           0X27
 
-#define LSM6DSOX_OUTX_L_A           0X28
-#define LSM6DSOX_OUTX_H_A           0X29
-#define LSM6DSOX_OUTY_L_A           0X2A
-#define LSM6DSOX_OUTY_H_A           0X2B
-#define LSM6DSOX_OUTZ_L_A           0X2C
-#define LSM6DSOX_OUTZ_H_A           0X2D
+#define LSM6DS_OUTX_L_A           0X28
+#define LSM6DS_OUTX_H_A           0X29
+#define LSM6DS_OUTY_L_A           0X2A
+#define LSM6DS_OUTY_H_A           0X2B
+#define LSM6DS_OUTZ_L_A           0X2C
+#define LSM6DS_OUTZ_H_A           0X2D
 
 class LSM6Class {
   public:

@@ -1,5 +1,5 @@
 /*
-  This file is part of the Arduino_LSM6DSOX library.
+  This file is part of the Arduino_LSM6DS library.
   Copyright (c) 2021 Arduino SA. All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -33,7 +33,7 @@ int LSM6Class::begin(TwoWire &wire)
 
   //LSM6DSOX, LSM6DSOW
   _slaveAddress = 0x6B;
-  if (readRegister(LSM6DSOX_WHO_AM_I_REG) == 0x6C)
+  if (readRegister(LSM6DS_WHO_AM_I_REG) == 0x6C)
   {
     Serial.println("LSM6DSOW/LSM6DSOX Detected");
     setupLSM6();
@@ -42,7 +42,7 @@ int LSM6Class::begin(TwoWire &wire)
 
   //LSM6DS3
   _slaveAddress = 0x6A;
-  if (readRegister(LSM6DSOX_WHO_AM_I_REG) == 0x69)
+  if (readRegister(LSM6DS_WHO_AM_I_REG) == 0x69)
   {
     Serial.println("LSM6DS3 Detected");
     setupLSM6();
@@ -51,7 +51,7 @@ int LSM6Class::begin(TwoWire &wire)
 
   //LSM6DSD
   _slaveAddress = 0x6A;
-  if (readRegister(LSM6DSOX_WHO_AM_I_REG) == 0x6A)
+  if (readRegister(LSM6DS_WHO_AM_I_REG) == 0x6A)
   {
     Serial.println("LSM6DSD Detected");
     setupLSM6();
@@ -65,27 +65,27 @@ int LSM6Class::begin(TwoWire &wire)
 int LSM6Class::setupLSM6(void)
 {
   // disable I3C interface to prevent bus glitches
-  writeRegister(LSM6DSOX_CTRL9_XL, 0xE2); //default 0xE0
+  writeRegister(LSM6DS_CTRL9_XL, 0xE2); //default 0xE0
 
   // enable BDU to prevent data corruption during reads
-  writeRegister(LSM6DSOX_CTRL9_XL, 0x44); //default 0x40
+  writeRegister(LSM6DS_CTRL9_XL, 0x44); //default 0x40
 
   // set the gyroscope control register to work at 104 Hz, 2000 dps and in bypass mode
-  // writeRegister(LSM6DSOX_CTRL2_G, 0x4C); //0100 1100
+  // writeRegister(LSM6DS_CTRL2_G, 0x4C); //0100 1100
   // set the gyroscope control register to work at 26 Hz, 2000 dps and in bypass mode
-  // writeRegister(LSM6DSOX_CTRL2_G, 0x2C); //0010 1100
+  // writeRegister(LSM6DS_CTRL2_G, 0x2C); //0010 1100
   // set the gyroscope control register to work at 104 Hz, 500 dps and in bypass mode
-  writeRegister(LSM6DSOX_CTRL2_G, 0x44); // 0100 0100
+  writeRegister(LSM6DS_CTRL2_G, 0x44); // 0100 0100
 
   // Set the Accelerometer control register to work at 104 Hz, 4 g,and in bypass mode and enable ODR/4
-  // low pass filter (check figure9 of LSM6DSOX's datasheet)
-  writeRegister(LSM6DSOX_CTRL1_A, 0x4A);
+  // low pass filter (check figure9 of LSM6DS's datasheet)
+  writeRegister(LSM6DS_CTRL1_A, 0x4A);
 
   // set gyroscope power mode to high performance and bandwidth to 16 MHz
-  writeRegister(LSM6DSOX_CTRL7_G, 0x00); // 0000 0000
+  writeRegister(LSM6DS_CTRL7_G, 0x00); // 0000 0000
 
   // Set the ODR config register to ODR/4
-  writeRegister(LSM6DSOX_CTRL8_A, 0x09);
+  writeRegister(LSM6DS_CTRL8_A, 0x09);
 
   return 1;
 }
@@ -94,7 +94,7 @@ int LSM6Class::readAcceleration(float *x, float *y, float *z)
 {
   int16_t data[3];
 
-  if (!readRegisters(LSM6DSOX_OUTX_L_A, (uint8_t *)data, sizeof(data)))
+  if (!readRegisters(LSM6DS_OUTX_L_A, (uint8_t *)data, sizeof(data)))
   {
     *x = NAN;
     *y = NAN;
@@ -113,7 +113,7 @@ int LSM6Class::readAcceleration(float *x, float *y, float *z)
 
 int LSM6Class::accelerationAvailable()
 {
-  if (readRegister(LSM6DSOX_STATUS_REG) & 0x01)
+  if (readRegister(LSM6DS_STATUS_REG) & 0x01)
   {
     return 1;
   }
@@ -130,7 +130,7 @@ int LSM6Class::readGyroscope(float *x, float *y, float *z)
 {
   int16_t data[3];
 
-  if (!readRegisters(LSM6DSOX_OUTX_L_G, (uint8_t *)data, sizeof(data)))
+  if (!readRegisters(LSM6DS_OUTX_L_G, (uint8_t *)data, sizeof(data)))
   {
     *x = NAN;
     *y = NAN;
@@ -149,7 +149,7 @@ int LSM6Class::readGyroscope(float *x, float *y, float *z)
 
 int LSM6Class::gyroscopeAvailable()
 {
-  if (readRegister(LSM6DSOX_STATUS_REG) & 0x02)
+  if (readRegister(LSM6DS_STATUS_REG) & 0x02)
   {
     return 1;
   }
@@ -172,7 +172,7 @@ int LSM6Class::readTemperatureFloat(float &temperature_deg)
   /* Read the raw temperature from the sensor. */
   int16_t temperature_raw = 0;
 
-  if (readRegisters(LSM6DSOX_OUT_TEMP_L, reinterpret_cast<uint8_t *>(&temperature_raw), sizeof(temperature_raw)) != 1)
+  if (readRegisters(LSM6DS_OUT_TEMP_L, reinterpret_cast<uint8_t *>(&temperature_raw), sizeof(temperature_raw)) != 1)
   {
     return 0;
   }
@@ -188,7 +188,7 @@ int LSM6Class::readTemperatureFloat(float &temperature_deg)
 
 int LSM6Class::temperatureAvailable()
 {
-  if (readRegister(LSM6DSOX_STATUS_REG) & 0x04)
+  if (readRegister(LSM6DS_STATUS_REG) & 0x04)
   {
     return 1;
   }
@@ -203,7 +203,7 @@ float LSM6Class::gyroscopeSampleRate()
 
 void LSM6Class::enableInterrupt()
 {
-  writeRegister(LSM6DSOX_INT1_CTRL, 0x03); // 0000 0011
+  writeRegister(LSM6DS_INT1_CTRL, 0x03); // 0000 0011
 }
 
 int LSM6Class::readRegister(uint8_t address)
