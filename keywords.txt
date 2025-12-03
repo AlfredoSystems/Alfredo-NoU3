@@ -34,7 +34,6 @@ setDeadband KEYWORD2
 begin KEYWORD2
 beginMotors KEYWORD2
 beginIMUs KEYWORD2
-updateIMUs KEYWORD2
 updateAngles KEYWORD2
 calibrateIMUs KEYWORD2
 getBatteryVoltage KEYWORD2

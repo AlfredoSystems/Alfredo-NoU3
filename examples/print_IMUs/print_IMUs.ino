@@ -5,6 +5,8 @@ void setup() {
   delay(2000);
   NoU3.begin();
 
+  NoU3.calibrateIMUs();
+
   Serial.println("Accel_X\tAccel_Y\tAccel_Z\tGyro_X\tGyro_Y\tGyro_Z\tMag_X\tMag_Y\tMag_Z\tRoll\tPitch\tYaw");
 }
 

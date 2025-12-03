@@ -15,6 +15,12 @@ SFE_MMC5983MA MMC5;
 
 NoU_Agent NoU3;
 
+// Task handles for stack analysis
+TaskHandle_t lsm6_task_handle = NULL;
+TaskHandle_t mmc5_task_handle = NULL;
+TaskHandle_t service_light_task_handle = NULL;
+TaskHandle_t monitor_task_handle = NULL;
+
 float fmap(float val, float in_min, float in_max, float out_min, float out_max)
 {
     return (val - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
@@ -68,6 +74,19 @@ void taskUpdateServiceLight(void *pvParameters)
     }
 }
 
+// void taskMonitor(void *pvParameters)
+// {
+//     while (true)
+//     {
+//         // Periodically check the stack usage for all tasks
+//         UBaseType_t lsm6_hwm = uxTaskGetStackHighWaterMark(lsm6_task_handle);
+//         UBaseType_t mmc5_hwm = uxTaskGetStackHighWaterMark(mmc5_task_handle);
+//         UBaseType_t sl_hwm = uxTaskGetStackHighWaterMark(service_light_task_handle);
+//         Serial.printf("Stack HWM (words) - LSM6: %u, MMC5: %u, ServiceLight: %u\n", lsm6_hwm, mmc5_hwm, sl_hwm);
+//         vTaskDelay(pdMS_TO_TICKS(2000)); // Check every 2 seconds
+//     }
+// }
+
 void NoU_Agent::begin()
 {
     Wire.begin(PIN_I2C_SDA_QWIIC, PIN_I2C_SCL_QWIIC, 400000);
@@ -77,6 +96,9 @@ void NoU_Agent::begin()
     beginIMUs();
 
     beginServiceLight();
+
+    // Create a low-priority monitoring task to check stack usage
+    // xTaskCreatePinnedToCore(taskMonitor, "taskMonitor", 2048, NULL, 1, &monitor_task_handle, 1);
 }
 
 void NoU_Agent::beginMotors()
@@ -99,7 +121,7 @@ void NoU_Agent::beginIMUs()
         pinMode(PIN_INTERRUPT_LSM6, INPUT);
         attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT_LSM6), interruptRoutineLSM6, RISING);
         LSM6.enableInterrupt(); // LSM6 collects readings at 104 hz
-        xTaskCreatePinnedToCore(taskUpdateLSM6, "taskUpdateLSM6", 4096, NULL, 2, NULL, 1);
+        xTaskCreatePinnedToCore(taskUpdateLSM6, "taskUpdateLSM6", 2048, NULL, 2, &lsm6_task_handle, 1);
     }
 
     // Initialize MMC5
@@ -118,23 +140,8 @@ void NoU_Agent::beginIMUs()
         attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT_MMC5), interruptRoutineMMC5, RISING);
         MMC5.enableInterrupt();
 
-        xTaskCreatePinnedToCore(taskUpdateMMC5, "taskUpdateMMC5", 4096, NULL, 2, NULL, 1);
+        xTaskCreatePinnedToCore(taskUpdateMMC5, "taskUpdateMMC5", 2048, NULL, 2, &mmc5_task_handle, 1);
     }
-}
-
-bool NoU_Agent::updateIMUs()
-{
-    bool isNewData = false;
-    if (updateLSM6())
-    {
-        isNewData = true;
-    }
-    if (updateMMC5())
-    {
-        isNewData = true;
-    }
-
-    return isNewData;
 }
 
 bool NoU_Agent::updateLSM6()
@@ -216,29 +223,34 @@ void NoU_Agent::calibrateIMUs(float gravity_x, float gravity_y, float gravity_z)
 
     while (millis() < startTime + calibrationTimeMs)
     {
-        // Check if data is available and measurements are not complete
-        if (NoU3.updateIMUs())
-        {
+        // Store measurements in arrays
+        acceleration_x_accumulator += NoU3.acceleration_x;
+        acceleration_y_accumulator += NoU3.acceleration_y;
+        acceleration_z_accumulator += NoU3.acceleration_z;
+        gyroscope_x_accumulator += NoU3.gyroscope_x;
+        gyroscope_y_accumulator += NoU3.gyroscope_y;
+        gyroscope_z_accumulator += NoU3.gyroscope_z;
 
-            // Store measurements in arrays
-            acceleration_x_accumulator += NoU3.acceleration_x;
-            acceleration_y_accumulator += NoU3.acceleration_y;
-            acceleration_z_accumulator += NoU3.acceleration_z;
-            gyroscope_x_accumulator += NoU3.gyroscope_x;
-            gyroscope_y_accumulator += NoU3.gyroscope_y;
-            gyroscope_z_accumulator += NoU3.gyroscope_z;
+        num_vals++;
 
-            num_vals++;
-        }
+        vTaskDelay(pdMS_TO_TICKS(1));
     }
 
-    // Calculate averages
-    acceleration_x_offset = (acceleration_x_accumulator / num_vals) - gravity_x;
-    acceleration_y_offset = (acceleration_y_accumulator / num_vals) - gravity_y;
-    acceleration_z_offset = (acceleration_z_accumulator / num_vals) - gravity_z;
-    gyroscope_x_offset = gyroscope_x_accumulator / num_vals;
-    gyroscope_y_offset = gyroscope_y_accumulator / num_vals;
-    gyroscope_z_offset = gyroscope_z_accumulator / num_vals;
+    if (num_vals > 0)
+    {
+        // Calculate averages
+        acceleration_x_offset = (acceleration_x_accumulator / num_vals) - gravity_x;
+        acceleration_y_offset = (acceleration_y_accumulator / num_vals) - gravity_y;
+        acceleration_z_offset = (acceleration_z_accumulator / num_vals) - gravity_z;
+        gyroscope_x_offset = gyroscope_x_accumulator / num_vals;
+        gyroscope_y_offset = gyroscope_y_accumulator / num_vals;
+        gyroscope_z_offset = gyroscope_z_accumulator / num_vals;
+    }
+
+    // Reset angles after calibration
+    roll = 0;
+    pitch = 0;
+    yaw = 0;
 
     // Print averages
     // Serial.print("Average values after "); Serial.print(num_vals); Serial.println(" measurements:");
@@ -256,7 +268,7 @@ void NoU_Agent::beginServiceLight()
     setServiceLight(LIGHT_DISABLED);
     updateServiceLight();
 
-    xTaskCreatePinnedToCore(taskUpdateServiceLight, "taskUpdateServiceLight", 4096, NULL, 2, NULL, 1);
+    xTaskCreatePinnedToCore(taskUpdateServiceLight, "taskUpdateServiceLight", 1024, NULL, 2, &service_light_task_handle, 1);
 }
 
 void NoU_Agent::setServiceLight(serviceLightState state)

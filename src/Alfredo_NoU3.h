@@ -60,7 +60,7 @@ class NoU_Agent {
 
 		void beginMotors();
 		void beginIMUs();
-        bool updateIMUs();
+        bool updateIMUs() __attribute__((unavailable("Delete this function call, this function is obsolete and removed. IMU updates are now automatic.")));
         bool updateLSM6();
         bool updateMMC5();
 
