@@ -33,7 +33,7 @@ void setup() {
 
 void loop() {
 
-    // This measures your batteries voltage and sends it to PestoLink
+    // This measures your batterys voltage and sends it to PestoLink
     // You could use this value for a lot of cool things, for example make LEDs flash when your batteries are low?
     float batteryVoltage = NoU3.getBatteryVoltage();
     PestoLink.printBatteryVoltage(batteryVoltage);

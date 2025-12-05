@@ -42,7 +42,7 @@ void loop() {
         lastPrintTime = millis();
     }
 
-    // This measures your batteries voltage and sends it to PestoLink
+    // This measures your batterys voltage and sends it to PestoLink
     float batteryVoltage = NoU3.getBatteryVoltage();
     PestoLink.printBatteryVoltage(batteryVoltage);
 
