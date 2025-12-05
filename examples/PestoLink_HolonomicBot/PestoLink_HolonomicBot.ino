@@ -47,8 +47,8 @@ void loop() {
     PestoLink.printBatteryVoltage(batteryVoltage);
 
     if (PestoLink.isConnected()) {
-        float fieldPowerX = PestoLink.getAxis(1);
-        float fieldPowerY = -1 * PestoLink.getAxis(0);
+        float fieldPowerX = PestoLink.getAxis(0);
+        float fieldPowerY = -1 * PestoLink.getAxis(1);
         float rotationPower = -1 * PestoLink.getAxis(2);
 
         // Get robot heading (in radians) from the gyro
