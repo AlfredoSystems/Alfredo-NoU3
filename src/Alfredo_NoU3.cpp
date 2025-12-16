@@ -431,7 +431,7 @@ void NoU_Motor::setExponent(float exponent)
     this->exponent = exponent;
 }
 
-void NoU_Motor::setInverted(boolean isInverted)
+void NoU_Motor::setInverted(bool) isInverted)
 {
     this->inverted = isInverted;
 }

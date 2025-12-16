@@ -91,8 +91,8 @@ class NoU_Motor {
     public:
         NoU_Motor(uint8_t motorPort);
         void set(float output);
-        void setInverted(boolean isInverted);
-        void setBrakeMode(boolean isBreakMode);
+        void setInverted(bool isInverted);
+        void setBrakeMode(bool isBreakMode);
         void setMotorCurve(float minimumOutput, float maximumOutput, float deadband, float exponent);
         void setMinimumOutput(float minimumOutput);
         void setMaximumOutput(float maximumOutput);
@@ -139,8 +139,8 @@ class NoU_Drivetrain {
         NoU_Drivetrain(NoU_Motor* frontLeftMotor, NoU_Motor* frontRightMotor,
                         NoU_Motor* rearLeftMotor, NoU_Motor* rearRightMotor);
         void tankDrive(float leftPower, float rightPower);
-        void arcadeDrive(float throttle, float rotation, boolean invertedReverse = false);
-        void curvatureDrive(float throttle, float rotation, boolean isQuickTurn = true);
+        void arcadeDrive(float throttle, float rotation, bool invertedReverse = false);
+        void curvatureDrive(float throttle, float rotation, bool isQuickTurn = true);
         void holonomicDrive(float xVelocity, float yVelocity, float rotation, bool plusConfig = false);
         void setMotorCurves(float minimumOutput, float maximumOutput, float deadband, float exponent);
         void setMinimumOutput(float minimumOutput);

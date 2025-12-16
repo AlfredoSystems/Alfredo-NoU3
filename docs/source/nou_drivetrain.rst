@@ -66,7 +66,7 @@ NoU_Drivetrain
 
         .. seealso:: If unsure of which style of drivetrain control to use, curvature drive (:cpp:func:`curvatureDrive`) is usually recommended.
 
-    .. cpp:function:: void arcadeDrive(float throttle, float rotation, boolean invertedReverse=false)
+    .. cpp:function:: void arcadeDrive(float throttle, float rotation, bool invertedReverse=false)
 
         Arcade drive takes the provided throttle and adjusts the power delivered to each side of the drivetrain based on the provided rotation value. This allows control over the robot's speed and rotation, similarly to many racing games, hence the name "arcade drive".
 
@@ -98,7 +98,7 @@ NoU_Drivetrain
 
         .. seealso:: This method is based on WPILib's implementation of arcade drive (`Java <https://github.com/wpilibsuite/allwpilib/blob/ee03a7ad3bcc156d3b9c07c590e32bca5df83537/wpilibj/src/main/java/edu/wpi/first/wpilibj/drive/DifferentialDrive.java#L172>`_, `C++ <https://github.com/wpilibsuite/allwpilib/blob/ee03a7ad3bcc156d3b9c07c590e32bca5df83537/wpilibc/src/main/native/cpp/drive/DifferentialDrive.cpp#L29>`_) for FIRST Robotics Competition.
 
-    .. cpp:function:: void curvatureDrive(float throttle, float rotation, boolean isQuickTurn=true)
+    .. cpp:function:: void curvatureDrive(float throttle, float rotation, bool isQuickTurn=true)
 
         When using arcade drive (see :cpp:func:`arcadeDrive`), for the same value of `rotation`, the drivetrain will traverse a much tighter arc when `throttle` is small compared to when it is large. Curvature drive is similar to arcade drive, but instead, regardless of the `throttle` value, the drivetrain traverses an arc with the same radius for the same value of `rotation`. In other words, rather than directly applying a differential to the power applied to the two sides of the drivetrain, the `rotation` value is the ratio of power applied to the two sides of the drivetrain.
 

@@ -66,11 +66,11 @@ NoU_Motor
 				`This more technical explanation <DecayModes_>`_ of how the brake (slow decay) and release (fast decay) states work.
 		
 	
-	.. cpp:function:: void setInverted(boolean isInverted)
+	.. cpp:function:: void setInverted(bool isInverted)
 	
 		Sets whether the motor should always spin in the direction opposite of standard. This function is usually meant to be used called just once during setup, not repeatedly during operation. To switch the direction of a motor dynamically, use the :cpp:func:`set` function.
 		
-		:param boolean isInverted: If ``true``, sets the motor to spin in the opposite direction of standard. If ``false``, sets the motor to spin normally.
+		:param bool isInverted: If ``true``, sets the motor to spin in the opposite direction of standard. If ``false``, sets the motor to spin normally.
 		
 		**Example usage:**
 		
@@ -80,7 +80,7 @@ NoU_Motor
 			
 		Sets ``myMotor`` to be inverted.
 	
-	.. cpp:function:: boolean isInverted()
+	.. cpp:function:: bool isInverted()
 	
 		Gets whether the motor has been set as inverted using the :cpp:func:`setInverted` function.
 		
