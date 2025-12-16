@@ -634,8 +634,16 @@ void NoU_Drivetrain::curvatureDrive(float throttle, float rotation, boolean isQu
     setMotors(leftPower, rightPower, leftPower, rightPower);
 }
 
-void NoU_Drivetrain::holonomicDrive(float xVelocity, float yVelocity, float rotation, bool plusConfig)
+void NoU_Drivetrain::holonomicDrive(float latest_xVelocity, float latest_yVelocity, float latest_rotation, bool plusConfig)
 {
+    static float xVelocity = 0;
+    static float yVelocity = 0;
+    static float rotation = 0;
+
+    if (!isnan(latest_xVelocity)) xVelocity = latest_xVelocity;
+    if (!isnan(latest_yVelocity)) yVelocity = latest_yVelocity;
+    if (!isnan(latest_rotation)) rotation = latest_rotation;
+    
     if (drivetrainType == DRIVE_TWO_MOTORS)
         return;
 
