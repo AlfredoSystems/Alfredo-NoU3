@@ -436,7 +436,7 @@ void NoU_Motor::setInverted(bool) isInverted)
     this->inverted = isInverted;
 }
 
-void NoU_Motor::setBrakeMode(boolean isBrakeMode)
+void NoU_Motor::setBrakeMode(bool isBrakeMode)
 {
     this->brakeMode = isBrakeMode;
 }
@@ -535,7 +535,7 @@ void NoU_Drivetrain::tankDrive(float leftPower, float rightPower)
     setMotors(leftPower, rightPower, leftPower, rightPower);
 }
 
-void NoU_Drivetrain::arcadeDrive(float throttle, float rotation, boolean invertedReverse)
+void NoU_Drivetrain::arcadeDrive(float throttle, float rotation, bool invertedReverse)
 {
     float leftPower = 0;
     float rightPower = 0;
@@ -569,10 +569,10 @@ void NoU_Drivetrain::arcadeDrive(float throttle, float rotation, boolean inverte
     setMotors(leftPower, rightPower, leftPower, rightPower);
 }
 
-void NoU_Drivetrain::curvatureDrive(float throttle, float rotation, boolean isQuickTurn)
+void NoU_Drivetrain::curvatureDrive(float throttle, float rotation, bool isQuickTurn)
 {
     float angularPower;
-    boolean overPower;
+    bool overPower;
 
     if (isQuickTurn)
     {
