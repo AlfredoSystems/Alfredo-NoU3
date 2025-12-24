@@ -289,10 +289,13 @@ void NoU_Agent::updateServiceLight()
         dutyLED = (1 << RSL_PWM_RES) - 1;
         break;
     case LIGHT_ENABLED:
-        dutyLED = millis() % 1000 < 500 ? (millis() % 500) * 2 : (500 - (millis() % 500)) * 2;
+        dutyLED = (millis() % 1000 < 500) ? (millis() % 500) * 2 : (500 - (millis() % 500)) * 2;
         break;
     case LIGHT_DISABLED:
         dutyLED = (1 << RSL_PWM_RES) - 1;
+        break;
+    case LIGHT_CALIBRATING:
+        dutyLED = (millis() % 100 < 40) ? (1 << RSL_PWM_RES) - 1 : 1;
         break;
     }
     // Serial.println(dutyLED);
@@ -431,7 +434,7 @@ void NoU_Motor::setExponent(float exponent)
     this->exponent = exponent;
 }
 
-void NoU_Motor::setInverted(bool) isInverted)
+void NoU_Motor::setInverted(bool isInverted)
 {
     this->inverted = isInverted;
 }

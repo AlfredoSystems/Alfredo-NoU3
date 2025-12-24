@@ -28,11 +28,12 @@ void setup() {
     Serial.begin(115200);
 
     NoU3.begin();
-    
-    NoU3.calibrateIMUs(); // this takes exactly one second. Do not move the robot during calibration.
 
     frontLeftMotor.setInverted(true);
     rearLeftMotor.setInverted(true);
+
+    NoU3.setServiceLight(LIGHT_CALIBRATING);
+    NoU3.calibrateIMUs(); // this takes exactly one second. Do not move the robot during calibration.
 }
 
 void loop() {

@@ -46,7 +46,8 @@ typedef enum {
     LIGHT_OFF,
     LIGHT_ON,
     LIGHT_DISABLED,
-    LIGHT_ENABLED
+    LIGHT_ENABLED,
+    LIGHT_CALIBRATING
 } serviceLightState;
 
 typedef enum {
