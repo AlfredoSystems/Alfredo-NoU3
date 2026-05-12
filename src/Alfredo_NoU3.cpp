@@ -114,7 +114,7 @@ void NoU_Agent::beginIMUs()
     // Initialize LSM6
     if (LSM6.begin(Wire1) == false)
     {
-        Serial.println("LSM6 did not respond.");
+        //Serial.println("LSM6 did not respond.");
     }
     else
     {
@@ -127,7 +127,7 @@ void NoU_Agent::beginIMUs()
     // Initialize MMC5
     if (MMC5.begin(Wire1) == false)
     {
-        Serial.println("MMC5 did not respond.");
+        //Serial.println("MMC5 did not respond.");
     }
     else
     {
