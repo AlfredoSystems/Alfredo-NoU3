@@ -111,6 +111,19 @@ void NoU_Agent::beginMotors()
 
 void NoU_Agent::beginIMUs()
 {
+    if (lsm6_task_handle != NULL)
+    {
+        vTaskDelete(lsm6_task_handle);
+        lsm6_task_handle = NULL;
+        detachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT_LSM6));
+    }
+    if (mmc5_task_handle != NULL)
+    {
+        vTaskDelete(mmc5_task_handle);
+        mmc5_task_handle = NULL;
+        detachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT_MMC5));
+    }
+
     // Initialize LSM6
     if (LSM6.begin(Wire1) == false)
     {
@@ -264,6 +277,12 @@ void NoU_Agent::calibrateIMUs(float gravity_x, float gravity_y, float gravity_z)
 
 void NoU_Agent::beginServiceLight()
 {
+    if (service_light_task_handle != NULL)
+    {
+        vTaskDelete(service_light_task_handle);
+        service_light_task_handle = NULL;
+    }
+
     ledcAttachChannel(RSL_PIN, RSL_PWM_FREQ, RSL_PWM_RES, RSL_CHANNEL);
     setServiceLight(LIGHT_DISABLED);
     updateServiceLight();
@@ -323,12 +342,10 @@ void NoU_Motor::beginEncoder(int8_t pinA, int8_t pinB)
     if (pinA == -1 || pinB == -1)
     {
         if (this->motorPort < 2 || this->motorPort > 7)
-        {
             return;
-        }
 
-        pinA = encoderPinMap[this->motorPort - 2][0];
-        pinB = encoderPinMap[this->motorPort - 2][1];
+        if (pinA == -1) pinA = encoderPinMap[this->motorPort - 2][0];
+        if (pinB == -1) pinB = encoderPinMap[this->motorPort - 2][1];
     }
 
     this->_encoder.begin(pinA, pinB);
@@ -395,7 +412,8 @@ float NoU_Motor::applyCurve(float input)
     float sign = (input == 0) ? 0 : (input > 0 ? 1 : -1);
     float x = fabs(input);
 
-    if (x < deadband)
+    float range = 1.0f - deadband;
+    if (x < deadband || range <= 0.0f)
         return 0;
 
     float curved = pow(max(fmap(constrain(x, 0, 1), deadband, 1, 0, 1), 0.0f), exponent);
