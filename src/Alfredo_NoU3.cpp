@@ -346,6 +346,8 @@ void NoU_Motor::resetPosition()
 
 void NoU_Motor::set(float output)
 {
+    if (this->motorPort < 1 || this->motorPort > 8) return;
+
     uint8_t portMap[8][2] = {{4, 5}, {6, 7}, {8, 9}, {10, 11}, {14, 15}, {12, 13}, {2, 3}, {0, 1}};
     // needs to be changed to this at some point
     // uint8_t portMap[8][2] = {{5, 4}, {7, 6}, {9, 8}, {11, 10}, {14, 15}, {12, 13}, {2, 3}, {0, 1}};
@@ -446,35 +448,20 @@ void NoU_Motor::setBrakeMode(bool isBrakeMode)
 
 NoU_Servo::NoU_Servo(uint8_t servoPort, uint16_t minPulse, uint16_t maxPulse)
 {
-    switch (servoPort)
-    {
-    case 1:
-        pin = PIN_SERVO_1;
-        channel = SERVO_1_CHANNEL;
-        break;
-    case 2:
-        pin = PIN_SERVO_2;
-        channel = SERVO_2_CHANNEL;
-        break;
-    case 3:
-        pin = PIN_SERVO_3;
-        channel = SERVO_3_CHANNEL;
-        break;
-    case 4:
-        pin = PIN_SERVO_4;
-        channel = SERVO_4_CHANNEL;
-        break;
-    case 5:
-        pin = PIN_SERVO_5;
-        channel = SERVO_5_CHANNEL;
-        break;
-    case 6:
-        pin = PIN_SERVO_6;
-        channel = SERVO_6_CHANNEL;
-        break;
-    }
     this->minPulse = minPulse;
     this->maxPulse = maxPulse;
+
+    if (servoPort < 1 || servoPort > 6) return;
+
+    switch (servoPort)
+    {
+    case 1: pin = PIN_SERVO_1; channel = SERVO_1_CHANNEL; break;
+    case 2: pin = PIN_SERVO_2; channel = SERVO_2_CHANNEL; break;
+    case 3: pin = PIN_SERVO_3; channel = SERVO_3_CHANNEL; break;
+    case 4: pin = PIN_SERVO_4; channel = SERVO_4_CHANNEL; break;
+    case 5: pin = PIN_SERVO_5; channel = SERVO_5_CHANNEL; break;
+    case 6: pin = PIN_SERVO_6; channel = SERVO_6_CHANNEL; break;
+    }
     ledcAttachChannel(pin, SERVO_PWM_FREQ, SERVO_PWM_RES, channel);
 }
 

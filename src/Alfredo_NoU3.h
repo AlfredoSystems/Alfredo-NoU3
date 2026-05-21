@@ -127,11 +127,11 @@ class NoU_Servo {
         uint16_t getMicroseconds();
         float getDegrees();
     private:
-        uint8_t pin;
-        uint8_t channel;
+        uint8_t pin = 0;
+        uint8_t channel = 0;
         uint16_t minPulse;
         uint16_t maxPulse;
-        uint16_t pulse;
+        uint16_t pulse = 0;
 };
 
 class NoU_Drivetrain {

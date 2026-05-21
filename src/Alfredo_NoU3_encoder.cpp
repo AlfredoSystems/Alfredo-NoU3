@@ -5,7 +5,7 @@ Encoder* Encoder::instances[MAX_ENCODERS] = {nullptr};
 uint8_t Encoder::numEncoders = 0;
 
 Encoder::Encoder()
-    : _pinA(0), _pinB(0), _position(0), _prevState(0) {
+    : _pinA(0), _pinB(0), _position(0), _prevState(0), _index(MAX_ENCODERS) {
 
     if (numEncoders >= MAX_ENCODERS) return;
 
@@ -15,6 +15,8 @@ Encoder::Encoder()
 }
 
 void Encoder::begin(uint8_t pinA, uint8_t pinB) {
+    if (_index >= MAX_ENCODERS) return;
+
     _pinA = pinA;
     _pinB = pinB;
 
