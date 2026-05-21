@@ -67,8 +67,7 @@ void loop() {
 
         NoU3.setServiceLight(LIGHT_ENABLED);
     } else {
-        drivetrain.holonomicDrive(0, 0, 0); // stop motors if connection is lost
-
+        NoU3.stopMotors();
         NoU3.setServiceLight(LIGHT_DISABLED);
     }
 }

@@ -275,6 +275,11 @@ void NoU_Agent::calibrateIMUs(float gravity_x, float gravity_y, float gravity_z)
     // Serial.print("Gyroscope Z (deg/s): "); Serial.println(gyroscope_z_offset, 3);
 }
 
+void NoU_Agent::stopMotors()
+{
+    pca9685.setAllChannelsDutyCycle(0);
+}
+
 void NoU_Agent::beginServiceLight()
 {
     if (service_light_task_handle != NULL)

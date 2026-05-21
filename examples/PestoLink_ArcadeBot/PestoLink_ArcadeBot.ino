@@ -47,6 +47,7 @@ void loop() {
 
         NoU3.setServiceLight(LIGHT_ENABLED);
     } else {
+        NoU3.stopMotors();
         NoU3.setServiceLight(LIGHT_DISABLED);
     }
 

@@ -71,6 +71,8 @@ class NoU_Agent {
 		float getBatteryVoltage(){ return analogReadMilliVolts(PIN_SNS_VIN) * 0.001 * 7.818; };
 		float getVersionVoltage(){ return analogReadMilliVolts(PIN_SNS_VERSION) * 0.001 ; };
 
+        void stopMotors();
+
         void beginServiceLight();
         void setServiceLight(serviceLightState state);
         void updateServiceLight();

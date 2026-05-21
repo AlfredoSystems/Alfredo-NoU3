@@ -45,7 +45,9 @@ void loop() {
     startTest = true;
   }
 
-  if(startTest){
+  if(!startTest){
+    NoU3.stopMotors();
+  } else {
     NoU3.setServiceLight(LIGHT_ENABLED);
     
     for (float i = -1; i < 1; i += motorPeriod) {
