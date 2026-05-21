@@ -87,7 +87,6 @@ class LSM6Class {
 
     TwoWire* _wire = nullptr;
     int8_t _slaveAddress = -1;
-    int _irqPin;
 };
 
 #endif

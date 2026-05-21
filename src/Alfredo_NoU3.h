@@ -156,7 +156,7 @@ class NoU_Drivetrain {
         uint8_t drivetrainType;
         float quickStopThreshold = 0.2;
         float quickStopAlpha = 0.1;
-        float quickStopAccumulator;
+        float quickStopAccumulator = 0;
 };
 
 extern NoU_Agent NoU3;

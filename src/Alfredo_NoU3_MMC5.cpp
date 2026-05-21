@@ -227,11 +227,11 @@ int SFE_MMC5983MA::getTemperature()
     }
 
     // Wait until measurement is completed
+    unsigned long tStartT = millis();
     do
     {
-        // Wait a little so we won't flood MMC with requests
         delay(1);
-    } while (!mmc_io.isBitSet(STATUS_REG, MEAS_T_DONE));
+    } while (!mmc_io.isBitSet(STATUS_REG, MEAS_T_DONE) && (millis() - tStartT < 50));
 
     clearShadowBit(INT_CTRL_0_REG, TM_T, false); // Clear the bit - in shadow memory only
 
@@ -898,11 +898,11 @@ uint32_t SFE_MMC5983MA::getMeasurementX()
     }
 
     // Wait until measurement is completed
+    unsigned long tStartX = millis();
     do
     {
-        // Wait a little so we won't flood MMC with requests
         delay(1);
-    } while (!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE));
+    } while (!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE) && (millis() - tStartX < 50));
 
     clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
 
@@ -934,11 +934,11 @@ uint32_t SFE_MMC5983MA::getMeasurementY()
     }
 
     // Wait until measurement is completed
+    unsigned long tStartY = millis();
     do
     {
-        // Wait a little so we won't flood MMC with requests
         delay(1);
-    } while (!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE));
+    } while (!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE) && (millis() - tStartY < 50));
 
     clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
 
@@ -970,11 +970,11 @@ uint32_t SFE_MMC5983MA::getMeasurementZ()
     }
 
     // Wait until measurement is completed
+    unsigned long tStartZ = millis();
     do
     {
-        // Wait a little so we won't flood MMC with requests
         delay(1);
-    } while (!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE));
+    } while (!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE) && (millis() - tStartZ < 50));
 
     clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
 
@@ -1006,11 +1006,11 @@ bool SFE_MMC5983MA::getMeasurementXYZ(uint32_t *x, uint32_t *y, uint32_t *z)
     }
 
     // Wait until measurement is completed
+    unsigned long tStartXYZ = millis();
     do
     {
-        // Wait a little so we won't flood MMC with requests
         delay(1);
-    } while (!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE));
+    } while (!mmc_io.isBitSet(STATUS_REG, MEAS_M_DONE) && (millis() - tStartXYZ < 50));
 
     clearShadowBit(INT_CTRL_0_REG, TM_M, false); // Clear the bit - in shadow memory only
 
