@@ -86,7 +86,7 @@ class NoU_Agent {
 
         float roll = 0, pitch = 0, yaw = 0;
         
-        serviceLightState stateServiceLight;
+        volatile serviceLightState stateServiceLight;
 };
 
 class NoU_Motor {

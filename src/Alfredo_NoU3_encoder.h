@@ -2,6 +2,7 @@
 #define NOU3_ENCODER_H
 
 #include <Arduino.h>
+#include <freertos/portmacro.h>
 
 #define MAX_ENCODERS 8
 
@@ -15,9 +16,10 @@ public:
 
 private:
     uint8_t _pinA, _pinB;
-    volatile int32_t _position;
-    volatile uint8_t _prevState;
+    int32_t _position;
+    uint8_t _prevState;
     uint8_t _index;
+    portMUX_TYPE _mux;
 
     // Individual ISR functions
     static void isr0();

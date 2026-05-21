@@ -21,8 +21,14 @@ TaskHandle_t mmc5_task_handle = NULL;
 TaskHandle_t service_light_task_handle = NULL;
 TaskHandle_t monitor_task_handle = NULL;
 
+// Spinlock protecting all public IMU data fields (acceleration, gyroscope,
+// magnetometer, roll, pitch, yaw). Writers use portENTER_CRITICAL; readers
+// that need a consistent multi-field snapshot should do the same.
+static portMUX_TYPE imu_mux = portMUX_INITIALIZER_UNLOCKED;
+
 float fmap(float val, float in_min, float in_max, float out_min, float out_max)
 {
+    if (in_max == in_min) return out_min;
     return (val - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
@@ -163,24 +169,29 @@ bool NoU_Agent::updateLSM6()
 
     if (LSM6.accelerationAvailable())
     {
-        LSM6.readAcceleration(&acceleration_x, &acceleration_y, &acceleration_z); // result in Gs
-        acceleration_x -= acceleration_x_offset;
-        acceleration_y -= acceleration_y_offset;
-        acceleration_z -= acceleration_z_offset;
+        float ax, ay, az;
+        LSM6.readAcceleration(&ax, &ay, &az); // result in Gs
+        portENTER_CRITICAL(&imu_mux);
+        acceleration_x = ax - acceleration_x_offset;
+        acceleration_y = ay - acceleration_y_offset;
+        acceleration_z = az - acceleration_z_offset;
+        portEXIT_CRITICAL(&imu_mux);
 
         isNewData = true;
     }
 
     if (LSM6.gyroscopeAvailable())
     {
-        LSM6.readGyroscope(&gyroscope_x, &gyroscope_y, &gyroscope_z); // Results in rad per second
-        gyroscope_x -= gyroscope_x_offset;
-        gyroscope_y -= gyroscope_y_offset;
-        gyroscope_z -= gyroscope_z_offset;
+        float gx, gy, gz;
+        LSM6.readGyroscope(&gx, &gy, &gz); // Results in rad per second
+        portENTER_CRITICAL(&imu_mux);
+        gyroscope_x = gx - gyroscope_x_offset;
+        gyroscope_y = gy - gyroscope_y_offset;
+        gyroscope_z = gz - gyroscope_z_offset;
+        updateAngles(); // called inside the lock — reads gyro fields, writes roll/pitch/yaw
+        portEXIT_CRITICAL(&imu_mux);
 
         isNewData = true;
-
-        updateAngles();
     }
 
     return isNewData;
@@ -188,10 +199,19 @@ bool NoU_Agent::updateLSM6()
 
 bool NoU_Agent::updateMMC5()
 {
-    bool isNewData = false;
-
     MMC5.clearMeasDoneInterrupt();
-    isNewData = MMC5.readMagnetometer(&magnetometer_x, &magnetometer_y, &magnetometer_z); // Results in µT (microteslas)
+
+    float mx, my, mz;
+    bool isNewData = MMC5.readMagnetometer(&mx, &my, &mz); // Results in µT (microteslas)
+
+    if (isNewData)
+    {
+        portENTER_CRITICAL(&imu_mux);
+        magnetometer_x = mx;
+        magnetometer_y = my;
+        magnetometer_z = mz;
+        portEXIT_CRITICAL(&imu_mux);
+    }
 
     return isNewData;
 }
@@ -222,8 +242,22 @@ void NoU_Agent::updateAngles()
 
 void NoU_Agent::calibrateIMUs(float gravity_x, float gravity_y, float gravity_z)
 {
-    int num_vals = 0;
+    // Suspend the background task so we own the sensor and the offset fields
+    // for the duration of calibration.
+    if (lsm6_task_handle != NULL)
+        vTaskSuspend(lsm6_task_handle);
 
+    // Zero offsets so updateLSM6() accumulates raw sensor values.
+    portENTER_CRITICAL(&imu_mux);
+    acceleration_x_offset = 0;
+    acceleration_y_offset = 0;
+    acceleration_z_offset = 0;
+    gyroscope_x_offset = 0;
+    gyroscope_y_offset = 0;
+    gyroscope_z_offset = 0;
+    portEXIT_CRITICAL(&imu_mux);
+
+    int num_vals = 0;
     float acceleration_x_accumulator = 0;
     float acceleration_y_accumulator = 0;
     float acceleration_z_accumulator = 0;
@@ -232,26 +266,30 @@ void NoU_Agent::calibrateIMUs(float gravity_x, float gravity_y, float gravity_z)
     float gyroscope_z_accumulator = 0;
 
     unsigned long startTime = millis();
-    unsigned long calibrationTimeMs = 1000.0;
+    unsigned long calibrationTimeMs = 1000UL;
 
     while (millis() < startTime + calibrationTimeMs)
     {
-        // Store measurements in arrays
-        acceleration_x_accumulator += NoU3.acceleration_x;
-        acceleration_y_accumulator += NoU3.acceleration_y;
-        acceleration_z_accumulator += NoU3.acceleration_z;
-        gyroscope_x_accumulator += NoU3.gyroscope_x;
-        gyroscope_y_accumulator += NoU3.gyroscope_y;
-        gyroscope_z_accumulator += NoU3.gyroscope_z;
+        if (newDataAvailableLSM6)
+        {
+            newDataAvailableLSM6 = false;
+            updateLSM6(); // reads sensor, writes member fields under imu_mux
 
-        num_vals++;
-
+            // Task is suspended — no contention, read fields directly.
+            acceleration_x_accumulator += acceleration_x;
+            acceleration_y_accumulator += acceleration_y;
+            acceleration_z_accumulator += acceleration_z;
+            gyroscope_x_accumulator += gyroscope_x;
+            gyroscope_y_accumulator += gyroscope_y;
+            gyroscope_z_accumulator += gyroscope_z;
+            num_vals++;
+        }
         vTaskDelay(pdMS_TO_TICKS(1));
     }
 
+    portENTER_CRITICAL(&imu_mux);
     if (num_vals > 0)
     {
-        // Calculate averages
         acceleration_x_offset = (acceleration_x_accumulator / num_vals) - gravity_x;
         acceleration_y_offset = (acceleration_y_accumulator / num_vals) - gravity_y;
         acceleration_z_offset = (acceleration_z_accumulator / num_vals) - gravity_z;
@@ -259,20 +297,13 @@ void NoU_Agent::calibrateIMUs(float gravity_x, float gravity_y, float gravity_z)
         gyroscope_y_offset = gyroscope_y_accumulator / num_vals;
         gyroscope_z_offset = gyroscope_z_accumulator / num_vals;
     }
-
-    // Reset angles after calibration
     roll = 0;
     pitch = 0;
     yaw = 0;
+    portEXIT_CRITICAL(&imu_mux);
 
-    // Print averages
-    // Serial.print("Average values after "); Serial.print(num_vals); Serial.println(" measurements:");
-    // Serial.print("Acceleration X (Gs): "); Serial.println(acceleration_x_offset, 3);
-    // Serial.print("Acceleration Y (Gs): "); Serial.println(acceleration_y_offset, 3);
-    // Serial.print("Acceleration Z (Gs): "); Serial.println(acceleration_z_offset, 3);
-    // Serial.print("Gyroscope X (deg/s): "); Serial.println(gyroscope_x_offset, 3);
-    // Serial.print("Gyroscope Y (deg/s): "); Serial.println(gyroscope_y_offset, 3);
-    // Serial.print("Gyroscope Z (deg/s): "); Serial.println(gyroscope_z_offset, 3);
+    if (lsm6_task_handle != NULL)
+        vTaskResume(lsm6_task_handle);
 }
 
 void NoU_Agent::stopMotors()

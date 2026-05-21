@@ -5,7 +5,8 @@ Encoder* Encoder::instances[MAX_ENCODERS] = {nullptr};
 uint8_t Encoder::numEncoders = 0;
 
 Encoder::Encoder()
-    : _pinA(0), _pinB(0), _position(0), _prevState(0), _index(MAX_ENCODERS) {
+    : _pinA(0), _pinB(0), _position(0), _prevState(0), _index(MAX_ENCODERS),
+      _mux(portMUX_INITIALIZER_UNLOCKED) {
 
     if (numEncoders >= MAX_ENCODERS) return;
 
@@ -43,16 +44,16 @@ void Encoder::begin(uint8_t pinA, uint8_t pinB) {
 }
 
 int32_t Encoder::getPosition() {
-    noInterrupts();
+    portENTER_CRITICAL(&_mux);
     int32_t pos = _position;
-    interrupts();
+    portEXIT_CRITICAL(&_mux);
     return pos;
 }
 
 void Encoder::resetPosition() {
-    noInterrupts();
+    portENTER_CRITICAL(&_mux);
     _position = 0;
-    interrupts();
+    portEXIT_CRITICAL(&_mux);
 }
 
 void Encoder::update() {
@@ -66,8 +67,10 @@ void Encoder::update() {
          0,  1, -1,  0
     };
 
+    portENTER_CRITICAL_ISR(&_mux);
     _position += dirLookup[transition];
     _prevState = state;
+    portEXIT_CRITICAL_ISR(&_mux);
 }
 
 // Static ISR stubs — call back into instance
