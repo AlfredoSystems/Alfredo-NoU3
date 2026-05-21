@@ -87,13 +87,12 @@ class NoU_Agent {
         serviceLightState stateServiceLight;
 };
 
-//TODO: Add breakmode
 class NoU_Motor {
     public:
         NoU_Motor(uint8_t motorPort);
         void set(float output);
         void setInverted(bool isInverted);
-        void setBrakeMode(bool isBreakMode);
+        void setBrakeMode(bool isBrakeMode);
         void setMotorCurve(float minimumOutput, float maximumOutput, float deadband, float exponent);
         void setMinimumOutput(float minimumOutput);
         void setMaximumOutput(float maximumOutput);
@@ -105,7 +104,7 @@ class NoU_Motor {
         void resetPosition();
 
     private:
-        float applyCurve(float output);
+        float applyCurve(float output) const;
         uint8_t motorPort;
         bool inverted = false;
         bool brakeMode = false;

@@ -307,9 +307,11 @@ void NoU_Agent::updateServiceLight()
     case LIGHT_ON:
         dutyLED = (1 << RSL_PWM_RES) - 1;
         break;
-    case LIGHT_ENABLED:
-        dutyLED = (millis() % 1000 < 500) ? (millis() % 500) * 2 : (500 - (millis() % 500)) * 2;
+    case LIGHT_ENABLED: {
+        unsigned long t = millis() % 1000;
+        dutyLED = (t < 500) ? (int)(t * 2) : (int)((1000 - t) * 2);
         break;
+    }
     case LIGHT_DISABLED:
         dutyLED = (1 << RSL_PWM_RES) - 1;
         break;
@@ -407,7 +409,7 @@ void NoU_Motor::set(float output)
     pca9685.setChannelDutyCycle(portMap[this->motorPort - 1][1], pinOneDuty);
 }
 
-float NoU_Motor::applyCurve(float input)
+float NoU_Motor::applyCurve(float input) const
 {
     float sign = (input == 0) ? 0 : (input > 0 ? 1 : -1);
     float x = fabs(input);

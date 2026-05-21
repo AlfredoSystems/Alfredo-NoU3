@@ -68,7 +68,7 @@ class LSM6Class {
     int accelerationAvailable(); // Check for available data from accelerometer
 
     // Gyroscope
-    int readGyroscope(float *x, float *y, float *z); // Results are in degrees/second.
+    int readGyroscope(float *x, float *y, float *z); // Results are in radians/second.
     float gyroscopeSampleRate(); // Sampling rate of the sensor.
     int gyroscopeAvailable(); // Check for available data from gyroscope
 
