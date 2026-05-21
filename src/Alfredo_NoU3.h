@@ -155,7 +155,7 @@ class NoU_Drivetrain {
         NoU_Motor *frontRightMotor;
         NoU_Motor *rearLeftMotor;
         NoU_Motor *rearRightMotor;
-        uint8_t drivetrainType;
+        DrivetrainType drivetrainType;
         float quickStopThreshold = 0.2;
         float quickStopAlpha = 0.1;
         float quickStopAccumulator = 0;

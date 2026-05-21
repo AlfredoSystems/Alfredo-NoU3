@@ -7,16 +7,18 @@ uint8_t Encoder::numEncoders = 0;
 Encoder::Encoder()
     : _pinA(0), _pinB(0), _position(0), _prevState(0), _index(MAX_ENCODERS),
       _mux(portMUX_INITIALIZER_UNLOCKED) {
-
-    if (numEncoders >= MAX_ENCODERS) return;
-
-    _index = numEncoders;
-    instances[numEncoders] = this;
-    numEncoders++;
+    // Slot registration is deferred to begin() so that motors without
+    // encoders don't consume one of the 8 available slots.
 }
 
 void Encoder::begin(uint8_t pinA, uint8_t pinB) {
-    if (_index >= MAX_ENCODERS) return;
+    // Register on first call; re-calling begin() just updates the pins.
+    if (_index >= MAX_ENCODERS) {
+        if (numEncoders >= MAX_ENCODERS) return;
+        _index = numEncoders;
+        instances[numEncoders] = this;
+        numEncoders++;
+    }
 
     _pinA = pinA;
     _pinB = pinB;

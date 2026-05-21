@@ -411,8 +411,8 @@ void NoU_Motor::set(float output)
     if (inverted)
         motorPower = motorPower * -1;
 
-    double pinZeroDuty = 0;
-    double pinOneDuty = 0;
+    float pinZeroDuty = 0;
+    float pinOneDuty = 0;
 
     if (brakeMode)
     {
@@ -470,14 +470,12 @@ void NoU_Motor::setMotorCurve(float minimumOutput, float maximumOutput, float de
 
 void NoU_Motor::setMinimumOutput(float minimumOutput)
 {
-    minimumOutput = constrain(minimumOutput, 0, maximumOutput);
-    this->minimumOutput = minimumOutput;
+    this->minimumOutput = constrain(minimumOutput, 0, maximumOutput);
 }
 
 void NoU_Motor::setMaximumOutput(float maximumOutput)
 {
-    maximumOutput = constrain(maximumOutput, minimumOutput, 1);
-    this->maximumOutput = maximumOutput;
+    this->maximumOutput = constrain(maximumOutput, minimumOutput, 1);
 }
 
 void NoU_Motor::setDeadband(float deadband)
@@ -554,7 +552,7 @@ float NoU_Servo::getDegrees()
 
 NoU_Drivetrain::NoU_Drivetrain(NoU_Motor *leftMotor, NoU_Motor *rightMotor)
     : frontLeftMotor(leftMotor), frontRightMotor(rightMotor),
-      rearLeftMotor(), rearRightMotor(), drivetrainType(DRIVE_TWO_MOTORS)
+      rearLeftMotor(nullptr), rearRightMotor(nullptr), drivetrainType(DRIVE_TWO_MOTORS)
 {
 }
 
