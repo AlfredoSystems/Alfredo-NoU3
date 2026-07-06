@@ -1,1 +1,7 @@
 .claude/
+
+# Arduino IDE / arduino-cli build output (regenerated on every compile)
+examples/**/build/
+
+# Flasher script's precompiled cache (tools/flash_motorparty.py)
+tools/.build_motorparty/

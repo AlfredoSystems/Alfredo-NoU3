@@ -19,8 +19,11 @@ NoU_Servo servo2(2);
 NoU_Servo servo3(3);
 NoU_Servo servo4(4);
 
-//FVT mode is used for "Functional Verification testing"
-//This is used internally by Alfredo to test all NoU3s before they pass QA testing
+// FVT mode is used for "Functional Verification Testing".
+// This is used internally by Alfredo to test all NoU3s before they pass QA testing.
+// FVT_MODE is NOT enabled for normal uploads. It is turned on only by the
+// production flasher (tools/flash_motorparty.py), which injects -DFVT_MODE at
+// compile time. To force it on manually, uncomment the line below.
 
 //#define FVT_MODE
 
