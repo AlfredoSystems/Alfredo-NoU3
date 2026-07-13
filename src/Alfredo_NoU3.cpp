@@ -93,8 +93,33 @@ void taskUpdateServiceLight(void *pvParameters)
 //     }
 // }
 
+// A warm reset can interrupt an I2C transaction, leaving a device holding SDA
+// low. Clock SCL until it releases the line, then send a STOP.
+static void recoverI2cBus(uint8_t sdaPin, uint8_t sclPin)
+{
+    pinMode(sdaPin, INPUT_PULLUP);
+    pinMode(sclPin, OUTPUT_OPEN_DRAIN);
+    digitalWrite(sclPin, HIGH);
+    delayMicroseconds(5);
+    for (int i = 0; i < 9 && digitalRead(sdaPin) == LOW; i++)
+    {
+        digitalWrite(sclPin, LOW);
+        delayMicroseconds(5);
+        digitalWrite(sclPin, HIGH);
+        delayMicroseconds(5);
+    }
+    // STOP condition: SDA rising while SCL is high
+    pinMode(sdaPin, OUTPUT_OPEN_DRAIN);
+    digitalWrite(sdaPin, LOW);
+    delayMicroseconds(5);
+    digitalWrite(sdaPin, HIGH);
+}
+
 void NoU_Agent::begin()
 {
+    recoverI2cBus(PIN_I2C_SDA_QWIIC, PIN_I2C_SCL_QWIIC);
+    recoverI2cBus(PIN_I2C_SDA_IMU, PIN_I2C_SCL_IMU);
+
     Wire.begin(PIN_I2C_SDA_QWIIC, PIN_I2C_SCL_QWIIC, 400000);
 
     Wire1.begin(PIN_I2C_SDA_IMU, PIN_I2C_SCL_IMU, 400000);

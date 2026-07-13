@@ -66,11 +66,16 @@ int LSM6Class::begin(TwoWire &wire)
 
 int LSM6Class::setupLSM6(void)
 {
+  // software reset; the chip keeps stale state through a host warm reset
+  writeRegister(LSM6DS_CTRL3_C, 0x01);
+  for (unsigned long start = millis(); (readRegister(LSM6DS_CTRL3_C) & 0x01) && millis() - start < 100;)
+    delay(1);
+
   // disable I3C interface to prevent bus glitches
   writeRegister(LSM6DS_CTRL9_XL, 0xE2); //default 0xE0
 
   // enable BDU to prevent data corruption during reads
-  writeRegister(LSM6DS_CTRL9_XL, 0x44); //default 0x40
+  writeRegister(LSM6DS_CTRL3_C, 0x44); //default 0x04
 
   // set the gyroscope control register to work at 104 Hz, 2000 dps and in bypass mode
   // writeRegister(LSM6DS_CTRL2_G, 0x4C); //0100 1100
