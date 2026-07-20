@@ -32,8 +32,11 @@ void setup() {
     frontLeftMotor.setInverted(true);
     rearLeftMotor.setInverted(true);
 
+    //give the driver two seconds to set the robot down before starting calibration
+    delay(2000);
     NoU3.setServiceLight(LIGHT_CALIBRATING);
-    NoU3.calibrateIMUs(); // this takes exactly one second. Do not move the robot during calibration.
+    // calibration takes exactly one second. Do not move the robot during calibration.
+    NoU3.calibrateIMUs();
 }
 
 void loop() {
