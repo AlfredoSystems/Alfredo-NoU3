@@ -11,7 +11,7 @@ Overview
 * USB-C for reliable code upload
 * Four easy-to-use servo ports (which can be increased to a max of six)
 * Qwiic compatible!
-* Rated for up to 11.8V through the 5.5mm DC barrel jack.
+* Rated for 4.5V to 12.8V through the 5.5mm DC barrel jack (2S or 3S LiPo).
 
 .. image:: images/nou3-top.jpg
 
@@ -19,7 +19,7 @@ Motor Control
 -------------
 The NoU3 can control up to eight DC motors. Each DC motor has two wires and spins when a voltage difference is applied across them. This requires two terminals, which together make up a motor port.
 
-With 8 ports total, the NoU3 provides 16 total terminals. Each motor port can supply up to 11.8V in either direction and can deliver 1A of continuous current.
+With 8 ports total, the NoU3 provides 16 total terminals. Each motor port can supply up to 12.8V in either direction and can deliver 1A of continuous current.
 
 Each motor port has a number, M1-M8.
 
