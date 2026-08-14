@@ -15,7 +15,8 @@ NoU_Motor rearRightMotor(4);
 // This creates the drivetrain object, you shouldn't have to mess with this
 NoU_Drivetrain drivetrain(&frontLeftMotor, &frontRightMotor, &rearLeftMotor, &rearRightMotor);
 
-//The gyroscope sensor is by default precise, but not accurate. This is fixable by adjusting the angular scale factor.
+//------------------------------ CRITICAL CALIBRATION INFO --------------------------------//
+//Your gyroscope "out of the box" will always read a little high or a little low. This is fixable by adjusting the angular scale factor.
 //Tuning procedure: 
 //Rotate the robot in place exactly 5 times. Use the Serial printout to read the current gyro angle in Radians, we will call this "measured_angle".
 //measured_angle should be nearly 31.416 which is 5*2*pi. Update measured_angle below to complete the tuning process. 
