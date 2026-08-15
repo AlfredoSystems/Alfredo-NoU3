@@ -147,9 +147,9 @@ int LSM6Class::readGyroscope(float *x, float *y, float *z)
   }
 
   // REORDERED FOR NOU3 CONVENTION
-  *x = 1 * float(data[1]) * (PI / 180.0) * 500.0 / 32768.0;
-  *y = -1 * float(data[0]) * (PI / 180.0) * 500.0 / 32768.0;
-  *z = 1 * float(data[2]) * (PI / 180.0) * 500.0 / 32768.0;
+  *x = 1 * float(data[1]) * 0.0175 * (PI / 180.0);
+  *y = -1 * float(data[0]) * 0.0175 * (PI / 180.0);
+  *z = 1 * float(data[2]) * 0.0175 * (PI / 180.0);
 
   return 1;
 }
