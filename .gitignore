@@ -5,3 +5,6 @@ examples/**/build/
 
 # Flasher script's precompiled cache (tools/flash_motorparty.py)
 tools/.build_motorparty/
+
+# Python bytecode cache (appears if a tools script is ever imported)
+__pycache__/
