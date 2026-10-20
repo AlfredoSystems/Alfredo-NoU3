@@ -2,11 +2,13 @@
 
 #include <inttypes.h>
 
-#include "Alfredo_NoU3_LSM6.h"
-#include "Alfredo_NoU3_MMC5.h"
+#include <AlfredoFusion.h>
+
 #include "Alfredo_NoU3_PCA9.h"
-#include "Alfredo_NoU3_VQF.h"
 #include "Alfredo_NoU3_encoder.h"
+
+// The IMU sensor fusion class now lives in the AlfredoFusion library.
+typedef AlfredoVQF NoU3_VQF;
 
 const int PIN_SNS_VERSION = 1;
 const int PIN_SNS_VIN = 2;
@@ -27,6 +29,10 @@ const int RSL_PIN = 45;
 
 const int PIN_INTERRUPT_LSM6 = 48;
 const int PIN_INTERRUPT_MMC5 = 47;
+
+// IMU configuration (see beginIMUs)
+const float LSM6_SAMPLE_RATE_HZ = 104;  // accel + gyro ODR
+const int MMC5_SAMPLE_RATE_HZ = 100;    // magnetometer continuous mode rate
 
 // PWM Configuration
 const int SERVO_PWM_RES = 12; // bits
@@ -78,8 +84,9 @@ class NoU_Agent {
         // quaternion, rest detection, automatic gyro bias calibration,
         // optional calibration hooks, and flash persistence. The library
         // feeds it sensor samples automatically; sketches call it directly,
-        // e.g. NoU3.fusion.getQuaternion(w, x, y, z). See Alfredo_NoU3_VQF.h.
-        NoU3_VQF fusion{104.0f};  // keep in sync with the LSM6 ODR
+        // e.g. NoU3.fusion.getQuaternion(w, x, y, z). See AlfredoFusion's
+        // AlfredoFusion_VQF.h.
+        AlfredoVQF fusion{LSM6_SAMPLE_RATE_HZ};
 
 		float getBatteryVoltage(){ return analogReadMilliVolts(PIN_SNS_VIN) * 0.001 * 7.818; };
 		float getVersionVoltage(){ return analogReadMilliVolts(PIN_SNS_VERSION) * 0.001 ; };
@@ -181,7 +188,7 @@ class NoU_Drivetrain {
 };
 
 extern NoU_Agent NoU3;
-extern LSM6Class LSM6;
-extern MMC5983MAClass MMC5;
+extern AlfredoLSM6 LSM6;
+extern AlfredoMMC5983 MMC5;
 
 extern PCA9685 pca9685;

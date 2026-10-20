@@ -1,8 +1,6 @@
 #include "esp32-hal-ledc.h"
 #include "Arduino.h"
 
-#include "Alfredo_NoU3_LSM6.h"
-#include "Alfredo_NoU3_MMC5.h"
 #include "Alfredo_NoU3_PCA9.h"
 #include "Alfredo_NoU3_encoder.h"
 
@@ -10,8 +8,10 @@
 
 PCA9685 pca9685;
 
-LSM6Class LSM6;
-MMC5983MAClass MMC5;
+// IMU drivers from the AlfredoFusion library. They output chip axes; the
+// NoU3 board convention is applied in updateLSM6() / updateMMC5().
+AlfredoLSM6 LSM6;
+AlfredoMMC5983 MMC5;
 
 NoU_Agent NoU3;
 
@@ -155,16 +155,21 @@ void NoU_Agent::beginMotors()
 
 void NoU_Agent::beginIMUs()
 {
-    // Restore saved calibration (accel cal, gyro scale)
+    // Restore saved calibration (accel cal, gyro scale). The namespace is
+    // the one NoU3 releases have always used, so existing calibrations
+    // survive the move to AlfredoFusion.
+    fusion.setFlashNamespace("nou3imu");
     fusion.loadCalibrationFromFlash();
 
-    // Initialize LSM6
+    // Initialize LSM6: 104 Hz, +/-4 g, +/-500 dps
     if (LSM6.begin(Wire1) == false)
     {
         //Serial.println("LSM6 did not respond.");
     }
     else
     {
+        LSM6.configure(LSM6_SAMPLE_RATE_HZ, 4, 500);
+
         // Tasks are created once and never deleted (deleting a task that is
         // mid-I2C-transaction would leak the Wire1 bus mutex); re-calling
         // beginIMUs() re-initializes the sensor and reuses the task. The
@@ -173,21 +178,17 @@ void NoU_Agent::beginIMUs()
             xTaskCreatePinnedToCore(taskUpdateLSM6, "taskUpdateLSM6", 4096, NULL, 2, &lsm6_task_handle, 1);
         pinMode(PIN_INTERRUPT_LSM6, INPUT);
         attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT_LSM6), interruptRoutineLSM6, RISING);
-        LSM6.enableInterrupt(); // LSM6 collects readings at 104 hz
+        LSM6.enableInterrupt(); // INT1 pulses on every sample
     }
 
-    // Initialize MMC5
+    // Initialize MMC5: continuous mode at 100 Hz, 800 Hz bandwidth, auto set/reset
     if (MMC5.begin(Wire1) == false)
     {
         //Serial.println("MMC5 did not respond.");
     }
     else
     {
-        MMC5.softReset();
-        MMC5.setFilterBandwidth(800);
-        MMC5.setContinuousModeFrequency(100); // Allowed values are 1000, 200, 100, 50, 20, 10, 1 and 0
-        MMC5.enableAutomaticSetReset();
-        MMC5.enableContinuousMode();
+        MMC5.configure(MMC5_SAMPLE_RATE_HZ, 800, true);
 
         if (mmc5_task_handle == NULL)
             xTaskCreatePinnedToCore(taskUpdateMMC5, "taskUpdateMMC5", 2048, NULL, 2, &mmc5_task_handle, 1);
@@ -204,9 +205,14 @@ bool NoU_Agent::updateLSM6()
     // land during them it must not get paired with this sample.
     uint32_t edgeUs = lsm6EdgeMicros;
 
-    float gx, gy, gz, ax, ay, az;
-    if (!LSM6.readAccelerationAndGyroscope(&gx, &gy, &gz, &ax, &ay, &az))
+    // One STATUS check, then one 12-byte burst of both sensors.
+    float cax, cay, caz, cgx, cgy, cgz;  // chip axes
+    if (!LSM6.available() || !LSM6.read(cax, cay, caz, cgx, cgy, cgz))
         return false; // no fresh sample (or bus error); nothing to publish
+
+    // NoU3 board convention: X/Y swapped, Y negated. Accel in g, gyro in rad/s.
+    float ax = cay, ay = -cax, az = caz;
+    float gx = cgy, gy = -cgx, gz = cgz;
 
     portENTER_CRITICAL(&imu_mux);
     acceleration_x = ax;
@@ -263,17 +269,18 @@ void NoU_Agent::updateAngles()
 
 bool NoU_Agent::updateMMC5()
 {
-    MMC5.clearMeasDoneInterrupt();
-
+    // read() clears the measurement-done flag (re-arming the INT pin) and
+    // returns the field in microteslas.
     float mx, my, mz;
-    bool isNewData = MMC5.readMagnetometer(&mx, &my, &mz); // Results in µT (microteslas)
+    bool isNewData = MMC5.read(mx, my, mz);
 
     if (isNewData)
     {
+        // NoU3 board convention: all axes negated
         portENTER_CRITICAL(&imu_mux);
-        magnetometer_x = mx;
-        magnetometer_y = my;
-        magnetometer_z = mz;
+        magnetometer_x = -mx;
+        magnetometer_y = -my;
+        magnetometer_z = -mz;
         portEXIT_CRITICAL(&imu_mux);
     }
 
