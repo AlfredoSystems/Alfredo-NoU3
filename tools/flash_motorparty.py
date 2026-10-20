@@ -109,6 +109,50 @@ def describe_port(device):
     return device
 
 
+def check_dependencies():
+    """The compile points --libraries at LIBRARIES_DIR, and nothing there is
+    auto-installed (that only happens through the IDE's Library Manager), so
+    every library this one depends on must already sit in that folder. Check
+    up front and name what's missing, instead of letting the compile die on a
+    bare 'AlfredoFusion.h: No such file or directory'.
+
+    Returns True when all of library.properties' depends= entries are found.
+    """
+    deps = []
+    try:
+        with open(os.path.join(REPO_DIR, "library.properties"), encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("depends="):
+                    # "AlfredoFusion (>=1.0), Other" -> ["AlfredoFusion", "Other"]
+                    deps = [d.split("(")[0].strip()
+                            for d in line.split("=", 1)[1].split(",") if d.strip()]
+    except OSError:
+        return True  # no properties file; let the compiler sort it out
+
+    # Installed library names come from each folder's library.properties
+    # (folder names are not reliable: ZIP installs get suffixes like -main).
+    installed = set()
+    for entry in os.listdir(LIBRARIES_DIR):
+        folder = os.path.join(LIBRARIES_DIR, entry)
+        if not os.path.isdir(folder):
+            continue
+        installed.add(entry)  # legacy 1.0-format libraries have no properties
+        try:
+            with open(os.path.join(folder, "library.properties"), encoding="utf-8") as f:
+                for line in f:
+                    if line.startswith("name="):
+                        installed.add(line.split("=", 1)[1].strip())
+                        break
+        except OSError:
+            pass
+
+    missing = [d for d in deps if d not in installed]
+    for d in missing:
+        log(f"The '{d}' library is missing from {LIBRARIES_DIR}", tag="ERR ")
+        log(f"Install it there (Arduino IDE Library Manager, or git clone) and rerun.", tag="ERR ")
+    return not missing
+
+
 def compile_sketch(cli, force):
     """Compile MotorParty once into BUILD_DIR. Returns True on success."""
     binary = os.path.join(BUILD_DIR, "MotorParty.ino.bin")
@@ -258,6 +302,9 @@ def main():
 
     if not os.path.isdir(SKETCH_DIR):
         log(f"Sketch folder not found: {SKETCH_DIR}", tag="ERR ")
+        return 1
+
+    if not check_dependencies():
         return 1
 
     if not compile_sketch(cli, args.recompile):
