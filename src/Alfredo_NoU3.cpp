@@ -161,15 +161,14 @@ void NoU_Agent::beginIMUs()
     fusion.setFlashNamespace("nou3imu");
     fusion.loadCalibrationFromFlash();
 
-    // Initialize LSM6: 104 Hz, +/-4 g, +/-500 dps
+    // begin() resets the chip and configures the defaults this library
+    // expects: 104 Hz (LSM6_SAMPLE_RATE_HZ), +/-4 g, +/-500 dps.
     if (LSM6.begin(Wire1) == false)
     {
         //Serial.println("LSM6 did not respond.");
     }
     else
     {
-        LSM6.configure(LSM6_SAMPLE_RATE_HZ, 4, 500);
-
         // Tasks are created once and never deleted (deleting a task that is
         // mid-I2C-transaction would leak the Wire1 bus mutex); re-calling
         // beginIMUs() re-initializes the sensor and reuses the task. The
@@ -181,15 +180,15 @@ void NoU_Agent::beginIMUs()
         LSM6.enableInterrupt(); // INT1 pulses on every sample
     }
 
-    // Initialize MMC5: continuous mode at 100 Hz, 800 Hz bandwidth, auto set/reset
+    // begin() resets the chip and configures the defaults this library
+    // expects: continuous mode at 100 Hz (MMC5_SAMPLE_RATE_HZ), 800 Hz
+    // bandwidth, auto set/reset.
     if (MMC5.begin(Wire1) == false)
     {
         //Serial.println("MMC5 did not respond.");
     }
     else
     {
-        MMC5.configure(MMC5_SAMPLE_RATE_HZ, 800, true);
-
         if (mmc5_task_handle == NULL)
             xTaskCreatePinnedToCore(taskUpdateMMC5, "taskUpdateMMC5", 2048, NULL, 2, &mmc5_task_handle, 1);
         pinMode(PIN_INTERRUPT_MMC5, INPUT);
@@ -269,22 +268,21 @@ void NoU_Agent::updateAngles()
 
 bool NoU_Agent::updateMMC5()
 {
-    // read() clears the measurement-done flag (re-arming the INT pin) and
-    // returns the field in microteslas.
+    // available() checks the measurement-done flag, so the 50 ms fallback
+    // poll can't republish a stale sample as fresh. read() clears the flag
+    // (re-arming the INT pin) and returns the field in microteslas.
     float mx, my, mz;
-    bool isNewData = MMC5.read(mx, my, mz);
+    if (!MMC5.available() || !MMC5.read(mx, my, mz))
+        return false; // no fresh sample (or bus error); nothing to publish
 
-    if (isNewData)
-    {
-        // NoU3 board convention: all axes negated
-        portENTER_CRITICAL(&imu_mux);
-        magnetometer_x = -mx;
-        magnetometer_y = -my;
-        magnetometer_z = -mz;
-        portEXIT_CRITICAL(&imu_mux);
-    }
+    // NoU3 board convention: all axes negated
+    portENTER_CRITICAL(&imu_mux);
+    magnetometer_x = -mx;
+    magnetometer_y = -my;
+    magnetometer_z = -mz;
+    portEXIT_CRITICAL(&imu_mux);
 
-    return isNewData;
+    return true;
 }
 
 void NoU_Agent::calibrateIMUs()
