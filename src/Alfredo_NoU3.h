@@ -2,6 +2,12 @@
 
 #include <inttypes.h>
 
+// Installing through the Library Manager pulls AlfredoFusion in
+// automatically, but a ZIP or git install does not - fail with instructions
+// instead of a bare missing-include error.
+#if !__has_include(<AlfredoFusion.h>)
+#error "Alfredo-NoU3 needs the AlfredoFusion library. In the Arduino IDE: Sketch > Include Library > Manage Libraries, search 'AlfredoFusion' and install it."
+#endif
 #include <AlfredoFusion.h>
 
 #include "Alfredo_NoU3_PCA9.h"
